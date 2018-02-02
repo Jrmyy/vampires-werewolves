@@ -35,9 +35,3 @@ public class Project {
     }
 
 }
-
-//jryhtegrfzedzs
-
-///test
-
-public class Test{}
