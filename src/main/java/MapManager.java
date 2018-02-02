@@ -89,3 +89,23 @@ public class MapManager {
     }
 
 }
+
+
+
+public class Species {
+
+}
+
+
+public class Human extends Species{
+
+
+
+}
+
+
+public class Surnatural extends Species{
+
+
+
+}
