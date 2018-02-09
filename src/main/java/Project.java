@@ -19,10 +19,11 @@ public class Project {
                 byte[][] humanHouses = client.listenHUM();
             } else if (order.equals("HME")) {
                 byte[] home = client.listenHME();
-                map.setInitialCoord(home);
+                map.setHome(home);
             } else if (order.equals("MAP")) {
                 byte[][] content = client.listenMAP();
                 map.fillMap(content);
+                map.setRace();
             } else if (order.equals("UPD")) {
                 byte[][] update = client.listenMAP();
                 map.fillMap(update);
