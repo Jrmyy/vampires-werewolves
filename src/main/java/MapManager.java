@@ -5,13 +5,23 @@ import java.lang.*;
 
 public class MapManager {
 
+    /* Played race id (Vampires: 1 / Werewolves: 2). */
     private int race;
+    /* List of coordinates for the played race. */
     private int[][] positions;
+    /* List of move to send to the server, using the same format as understood by the server,
+    ie a list of moves, where each move is a list of 5 elements: initial x position, initial y position, number of creatures to move, final x position and final y position.
+     */
     private int[][] move;
+    /* List of coordinates for the opponent race. */
     private int[][] adv_positions;
+    /* List of coordinates for the humans. */
     private int[][] human_positions;
+    /* Current map state: same format as defined by the server, ie indexed on x position, y position and race id.
+     * Contains number of creatures in each cell. */
     private int[][][] map;
 
+    /* After "SET" order from the server, set the map dimensions. */
     public void setMapDimensions(byte[] dimensions) {
         int rows = (int) dimensions[0];
         int cols = (int) dimensions[1];
@@ -23,6 +33,7 @@ public class MapManager {
         }
     }
 
+    /* After "MAP" or "UPD" order, update creatures' amount in the map. */
     public void fillMap(byte[][] content) {
         int x;
         int y;
@@ -42,6 +53,7 @@ public class MapManager {
         }
     }
 
+    /* After "HME" order, initialize list of positions for the played race with the initial position. */
     public void setHome(byte[] home) {
         int x = (int) home[0];
         int y = (int) home[1];
@@ -50,6 +62,7 @@ public class MapManager {
         positions[0][1] = y;
     }
 
+    /* After map has been initialized and home has been defined, identify which race is played. */
     public void setRace() {
         try {
             int x = this.positions[0][0];
@@ -64,12 +77,14 @@ public class MapManager {
         }
     }
 
+    /* Before playing our turn, looks map to update all positions lists. */
     private void defPositions() {
         int[][] humans = new int[0][2];
         int[][] vampires = new int[0][2];
         int[][] werewolves = new int[0][2];
         for (int i = 0; i < this.map.length; i++) {
             for (int j = 0; j < this.map[i].length; j++) {
+                /* For each cell, if one race is present, add this cell coordinates to this race's positions list. */
                 if (this.map[i][j][0] > 0) {
                     int[][] new_positions = new int[humans.length + 1][2];
                     System.arraycopy(humans, 0, new_positions, 0, humans.length);
@@ -91,6 +106,7 @@ public class MapManager {
                 }
             }
         }
+        /* Update positions lists depending on which race is played. */
         this.human_positions = humans;
         if (this.race == 1) {
             this.positions = vampires;
@@ -101,21 +117,26 @@ public class MapManager {
         }
     }
 
+    /* Play our turn. */
     public byte[][] chooseMove() {
-        /* Faire appel ici à toutes les méthodes utiles pour déterminer le mouvement à faire */
+        /* Update positions */
         this.defPositions();
+        /* Call methods to choose a move */
         return this.randomMove();
     }
 
+    /* For test only: a random move function. */
     public byte[][] randomMove() {
         try {
-            Thread.sleep(600); /* Pour modéliser le temps de calcul, à retirer bien évidemment dans la version finales */
+            Thread.sleep(600); /* To represent calculation time. */
             byte[][] res = new byte[0][5];
+            /* For each position where our race is present, choose a random move. */
             for (int i = 0; i < this.positions.length; i++) {
                 int[] destination = new int[2];
                 int[] coord = this.positions[i];
                 destination[0] = coord[0];
                 destination[1] = coord[1];
+                /* Choose randomly an adjacent cell. Try again while this cell is outside of the map. */
                 while ((destination[0] == coord[0] && destination[1] == coord[1]) || destination[0] < 0 || destination[0] >= map.length || destination[1] < 0 || destination[1] >= map[0].length) {
                     Random randomGenerator = new Random();
                     int dir = randomGenerator.nextInt(8);
@@ -130,8 +151,11 @@ public class MapManager {
                         destination[1] = coord[1] - 1;
                     }
                 }
+                /* To represent that group may split up, choose a random number between 1 and 100.
+                 * If this number is lower than number of creatures in the current cell, only this number of creatures will move. */
                 Random randomGenerator = new Random();
                 int nb_to_move = Math.min((map[coord[0]][coord[1]][1] + map[coord[0]][coord[1]][2]) , randomGenerator.nextInt(100) + 1);
+                /* Add this move to the move list. */
                 byte[] move = new byte[5];
                 move[0] = (byte) coord[0];
                 move[1] = (byte) coord[1];
@@ -150,7 +174,7 @@ public class MapManager {
         return new byte[0][0];
     }
 
-
+    /* Setters and getters */
 
     public int[][][] getMap() {
         return map;
