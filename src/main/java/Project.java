@@ -1,40 +1,42 @@
-import main.java.MapManager;
-
-import java.util.Random;
-
 public class Project {
 
-    public static void main(String[] args) {
-        TCPClient client = new TCPClient();
+    public static void main(String[] args) throws Exception {
+        //TCPClient client = new TCPClient(args[0], Integer.parseInt(args[1]));
+        TCPClient client = new TCPClient("localhost", 5555);
+
         MapManager map = new MapManager();
         client.sendName();
         boolean gameRunning = true;
-        String order = "";
+        String order;
         while (gameRunning) {
             order = client.listen();
-            if (order.equals("SET")) {
-                byte[] dimensions = client.listenSET();
-                map.setMapDimensions(dimensions);
-            } else if (order.equals("HUM")) {
-                byte[][] humanHouses = client.listenHUM();
-            } else if (order.equals("HME")) {
-                byte[] home = client.listenHME();
-                map.setInitialCoord(home);
-            } else if (order.equals("MAP")) {
-                byte[][] content = client.listenMAP();
-                map.fillMap(content);
-            } else if (order.equals("UPD")) {
-                byte[][] update = client.listenMAP();
-                map.fillMap(update);
-                byte[][] move = map.chooseMove();
-                client.sendMove(move);
-            } else if (order.equals("BYE")) {
-                gameRunning = false;
+            switch (order) {
+                case "SET":
+                    byte[] dimensions = client.baseListen();
+                    map.setMapDimensions(dimensions);
+                    break;
+                case "HUM":
+                    byte[][] humanHouses = client.listenHUM();
+                    break;
+                case "HME":
+                    byte[] home = client.baseListen();
+                    map.setInitialCoord(home);
+                    break;
+                case "MAP":
+                    byte[][] content = client.listenMAP();
+                    map.fillMap(content);
+                    break;
+                case "UPD":
+                    byte[][] update = client.listenMAP();
+                    map.fillMap(update);
+                    byte[][] move = map.chooseMove();
+                    client.sendMove(move);
+                    break;
+                case "BYE":
+                    gameRunning = false;
+                    break;
             }
         }
     }
 
 }
-
-//jryhtegrfzedzs
-
