@@ -83,6 +83,14 @@ public class TCPClient {
 
     }
 
+    public byte[] listenSET() {
+        return this.baseListen();
+    }
+
+    public byte[] listenHME() {
+        return this.baseListen();
+    }
+
     public byte[] baseListen() {
         try {
             byte[] dimensions = new byte[2];

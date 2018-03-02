@@ -12,19 +12,20 @@ public class Project {
             order = client.listen();
             switch (order) {
                 case "SET":
-                    byte[] dimensions = client.baseListen();
+                    byte[] dimensions = client.listenSET();
                     map.setMapDimensions(dimensions);
                     break;
                 case "HUM":
                     byte[][] humanHouses = client.listenHUM();
                     break;
                 case "HME":
-                    byte[] home = client.baseListen();
-                    map.setInitialCoord(home);
+                    byte[] home = client.listenHME();
+                    map.setHome(home);
                     break;
                 case "MAP":
                     byte[][] content = client.listenMAP();
                     map.fillMap(content);
+                    map.setRace();
                     break;
                 case "UPD":
                     byte[][] update = client.listenMAP();

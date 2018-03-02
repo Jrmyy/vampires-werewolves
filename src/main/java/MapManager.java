@@ -1,5 +1,14 @@
+import java.util.Random;
+import java.lang.*;
+
+
 public class MapManager {
 
+    private String race;
+    private int[][] positions;
+    private int[][] move;
+    private int[][] adv_positions;
+    private int[][] human_positions;
     private Coord source = new Coord();
     private Cell[][] map;
 
@@ -47,7 +56,7 @@ public class MapManager {
      * Récupère la coordonnée initiale de notre joueur
      * @param home
      */
-    public void setInitialCoord(byte[] home) {
+    public void setHome(byte[] home) {
         // On récupère les données et on les met dans source
         int x = (int) home[0];
         int y = (int) home[1];
@@ -55,31 +64,104 @@ public class MapManager {
         source.y = y;
     }
 
-    public byte[][] chooseMove() {
+    public void setRace() {
         try {
-            Thread.sleep(800);
-            Coord destination = new Coord(source.x, source.y);
-            /*
-             * On n'arrête pas tant que l'on n'a pas un résultat correct c'est à dire:
-             *  - destination != source
-             *  - destination n'est pas valide
-             */
-            while (
-                    (destination.x == source.x && destination.y == source.y) ||
-                            destination.x < 0 || destination.x >= map.length ||
-                            destination.y < 0 || destination.y >= map[0].length) {
-
-                // IA Logic here
-
+            int x = this.positions[0][0];
+            int y = this.positions[0][1];
+            if (this.map[x][y].vampires > this.map[x][y].werewolves) {
+                this.race = "vampires";
+            } else {
+                this.race = "werewolves";
             }
-            byte[][] res = new byte[1][5];
-            res[0][0] = (byte) source.x;
-            res[0][1] = (byte) source.y;
-            res[0][2] = (byte) (map[source.x][source.y].werewolves + map[source.x][source.y].vampires);
-            res[0][3] = (byte) destination.x;
-            res[0][4] = (byte) destination.y;
-            source.x = destination.x;
-            source.y = destination.y;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void defPositions() {
+        int[][] humans = new int[0][2];
+        int[][] vampires = new int[0][2];
+        int[][] werewolves = new int[0][2];
+        for (int i = 0; i < this.map.length; i++) {
+            for (int j = 0; j < this.map[i].length; j++) {
+                if (this.map[i][j].humans > 0) {
+                    int[][] new_positions = new int[humans.length + 1][2];
+                    System.arraycopy(humans, 0, new_positions, 0, humans.length);
+                    new_positions[humans.length][0] = i;
+                    new_positions[humans.length][1] = j;
+                    humans = new_positions;
+                } else if (this.map[i][j].vampires > 0) {
+                    int[][] new_positions = new int[vampires.length + 1][2];
+                    System.arraycopy(vampires, 0, new_positions, 0, vampires.length);
+                    new_positions[vampires.length][0] = i;
+                    new_positions[vampires.length][1] = j;
+                    vampires = new_positions;
+                } else if (this.map[i][j].werewolves > 0) {
+                    int[][] new_positions = new int[werewolves.length + 1][2];
+                    System.arraycopy(werewolves, 0, new_positions, 0, werewolves.length);
+                    new_positions[werewolves.length][0] = i;
+                    new_positions[werewolves.length][1] = j;
+                    werewolves = new_positions;
+                }
+            }
+        }
+        this.human_positions = humans;
+        if (this.race == 1) {
+            this.positions = vampires;
+            this.adv_positions = werewolves;
+        } else {
+            this.positions = werewolves;
+            this.adv_positions = vampires;
+        }
+    }
+
+    public byte[][] chooseMove() {
+        /* Faire appel ici à toutes les méthodes utiles pour déterminer le mouvement à faire */
+        this.defPositions();
+        return this.randomMove();
+    }
+
+    public byte[][] randomMove() {
+        try {
+            /* Pour modéliser le temps de calcul, à retirer bien évidemment dans la version finales */
+            Thread.sleep(600);
+            byte[][] res = new byte[0][5];
+            for (int i = 0; i < this.positions.length; i++) {
+                int[] destination = new int[2];
+                int[] coord = this.positions[i];
+                destination[0] = coord[0];
+                destination[1] = coord[1];
+                while (
+                        (destination[0] == coord[0] && destination[1] == coord[1]) ||
+                                destination[0] < 0 || destination[0] >= map.length ||
+                                destination[1] < 0 || destination[1] >= map[0].length
+                        ) {
+                    Random randomGenerator = new Random();
+                    int dir = randomGenerator.nextInt(8);
+                    if (dir >= 1 && dir <= 3) {
+                        destination[0] = coord[0] + 1;
+                    } else if (dir >= 5 && dir <= 7) {
+                        destination[0] = coord[0] - 1;
+                    }
+                    if (dir >= 3 && dir <= 5) {
+                        destination[1] = coord[1] + 1;
+                    } else if (dir >= 7 || dir <= 1) {
+                        destination[1] = coord[1] - 1;
+                    }
+                }
+                Random randomGenerator = new Random();
+                int nb_to_move = Math.min((map[coord[0]][coord[1]][1] + map[coord[0]][coord[1]][2]) , randomGenerator.nextInt(100) + 1);
+                byte[] move = new byte[5];
+                move[0] = (byte) coord[0];
+                move[1] = (byte) coord[1];
+                move[2] = (byte) nb_to_move;
+                move[3] = (byte) destination[0];
+                move[4] = (byte) destination[1];
+                byte[][] new_res = new byte[res.length + 1][5];
+                System.arraycopy(res, 0, new_res, 0, res.length);
+                System.arraycopy(move, 0, new_res[res.length], 0, 5);
+                res = new_res;
+            }
             return res;
         } catch (InterruptedException e) {
             e.printStackTrace();
