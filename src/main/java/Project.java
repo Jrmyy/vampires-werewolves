@@ -1,8 +1,9 @@
+import java.util.ArrayList;
+
 public class Project {
 
     public static void main(String[] args) throws Exception {
-        //TCPClient client = new TCPClient(args[0], Integer.parseInt(args[1]));
-        TCPClient client = new TCPClient("localhost", 5555);
+        TCPClient client = new TCPClient(args[0], Integer.parseInt(args[1]));
 
         MapManager map = new MapManager();
         client.sendName();
@@ -25,13 +26,12 @@ public class Project {
                 case "MAP":
                     byte[][] content = client.listenMAP();
                     map.fillMap(content);
-                    map.setRace();
                     break;
                 case "UPD":
                     byte[][] update = client.listenMAP();
                     map.fillMap(update);
-                    byte[][] move = map.chooseMove();
-                    client.sendMove(move);
+                    ArrayList<byte[]> moves = map.chooseMove();
+                    client.sendMove(moves);
                     break;
                 case "BYE":
                     gameRunning = false;

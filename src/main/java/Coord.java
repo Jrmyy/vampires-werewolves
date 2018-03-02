@@ -12,4 +12,7 @@ public class Coord {
         this.y = y;
     }
 
+    public boolean equals(Coord obj) {
+        return this.x == obj.x && this.y == obj.y;
+    }
 }

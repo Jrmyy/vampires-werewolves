@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.net.Socket;
 
@@ -37,7 +38,6 @@ public class TCPClient {
 
             while (!socket.isClosed() && in.available() < 1) {
                 Thread.sleep(10);
-                System.out.println("Socket not available ...");
             }
 
             if (socket.isClosed()) {
@@ -90,7 +90,7 @@ public class TCPClient {
         return this.baseListen();
     }
 
-    public byte[] baseListen() {
+    private byte[] baseListen() {
         try {
             byte[] dimensions = new byte[2];
             this.in.read(dimensions);
@@ -149,14 +149,15 @@ public class TCPClient {
         }
     }
 
-    public void sendMove(byte[][] move) {
-        // Send move to the server
+    public void sendMove(ArrayList<byte[]> moves) {
+        // Send moves to the server
         try {
-            byte nbMove = (byte) move.length;
+            byte nbMove = (byte) moves.size();
             this.out.write(MOV);
             this.out.write(nbMove);
-            for(int i = 0; i < nbMove; i++){
-                this.out.write(move[i]);
+            System.out.println(nbMove);
+            for (byte[] move: moves) {
+                this.out.write(move);
             }
         } catch (IOException e) {
             e.printStackTrace();

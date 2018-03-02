@@ -6,11 +6,12 @@ import java.lang.*;
 public class MapManager {
 
     // Peut être vampire ou loup garou
-    private String race;
+    private String race = null;
     // Liste des coordonnées pour la race que l'on joue
-    private ArrayList<Coord> positions;
+    private ArrayList<Coord> positions = new ArrayList<>();
+    private Coord home;
     // Liste des coordonées de l'adversaire
-    private ArrayList<Coord> opponentPosition;
+    private ArrayList<Coord> opponentPositions;
     // Liste des coordonnées des humains
     private ArrayList<Coord> humanPositions;
     // Etat de la carte
@@ -44,9 +45,10 @@ public class MapManager {
         int humans;
         int vampires;
         int werewolves;
-        positions = new ArrayList<>();
-        opponentPosition = new ArrayList<>();
-        humanPositions = new ArrayList<>();
+        this.positions = new ArrayList<>();
+        this.positions.add(this.home);
+        this.opponentPositions = new ArrayList<>();
+        this.humanPositions = new ArrayList<>();
         // Pour chaque case
         for (byte[] aContent : content) {
             // On récupère la coordonnée (x,y), le nombre d'espèces, et on le met dans notre matrice de Cell
@@ -59,20 +61,33 @@ public class MapManager {
             Coord coord = new Coord(x, y);
 
             if (humans > 0) {
-                humanPositions.add(coord);
+                this.humanPositions.add(coord);
             }
 
-            if (vampires > 0 && race.equals("vampires")) {
-                positions.add(coord);
+            if (this.race == null) {
+
+                if (vampires > 0 && coord == this.home) {
+                    this.setRace("vampires");
+                } else {
+                    this.opponentPositions.add(coord);
+                    this.setRace("werewolves");
+                }
+
             } else {
-                opponentPosition.add(coord);
+
+                if (vampires > 0 && this.race.equals("vampires")) {
+                    this.positions.add(coord);
+                } else {
+                    this.opponentPositions.add(coord);
+                }
+
+                if (werewolves > 0 && this.race.equals("werewolves")) {
+                    this.positions.add(coord);
+                } else {
+                    this.opponentPositions.add(coord);
+                }
             }
 
-            if (werewolves > 0 && race.equals("werewolves")) {
-                positions.add(coord);
-            } else {
-                opponentPosition.add(coord);
-            }
         }
     }
 
@@ -84,14 +99,15 @@ public class MapManager {
         // On récupère les données et on les met dans source
         int x = (int) home[0];
         int y = (int) home[1];
-        Coord position = new Coord(x, y);
-        positions.add(position);
+        this.home = new Coord(x, y);
+        positions.add(this.home);
+        System.out.println(this.positions);
     }
 
     public void setRace() {
         try {
-            int x = positions.get(0).x;
-            int y = positions.get(0).y;
+            int x = this.positions.get(0).x;
+            int y = this.positions.get(0).y;
             if (this.map[x][y].vampires > this.map[x][y].werewolves) {
                 this.race = "vampires";
             } else {
@@ -102,14 +118,17 @@ public class MapManager {
         }
     }
 
+    private void setRace(String race) {
+        this.race = race;
+    }
+
     /**
      * On joue notre tour
      * @return
      */
-    public byte[][] chooseMove() {
+    public ArrayList<byte[]> chooseMove() {
         // On fait notre mouvement
-        ArrayList<byte[]> moves = this.randomMove();
-        return moves.toArray(new byte[0][]);
+        return this.randomMove();
     }
 
     /**
@@ -122,12 +141,13 @@ public class MapManager {
             Thread.sleep(600);
             ArrayList<byte[]> results = new ArrayList<>();
             // Pour chacune de nos positions, faire un mouvement aléatoire
+            System.out.println(this.positions);
             for (Coord source : this.positions) {
                 Coord destination = new Coord(source.x, source.y);
                 while (
                         (source.x == destination.x && source.y == destination.y) ||
-                                destination.x < 0 || destination.x >= map.length ||
-                                destination.y < 0 || destination.y >= map[0].length
+                                destination.x < 0 || destination.x >= this.map.length ||
+                                destination.y < 0 || destination.y >= this.map[0].length
                         ) {
                     Random randomGenerator = new Random();
                     int dir = randomGenerator.nextInt(8);
