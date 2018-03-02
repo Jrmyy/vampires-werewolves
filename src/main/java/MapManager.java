@@ -1,19 +1,27 @@
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.lang.*;
 
 
 public class MapManager {
 
+    // Peut être vampire ou loup garou
     private String race;
-    private int[][] positions;
-    private int[][] move;
-    private int[][] adv_positions;
-    private int[][] human_positions;
-    private Coord source = new Coord();
+    // Liste des coordonnées pour la race que l'on joue
+    private ArrayList<Coord> positions;
+    // Liste des mouvements à envoyer au serveur (format 5 bits)
+    private ArrayList<Coord> moves;
+    // Liste des coordonées de l'adversaire
+    private Coord opponentPosition;
+    // Liste des coordonnées des humains
+    private ArrayList<Coord> humanPositions;
+    // Etat de la carte
     private Cell[][] map;
 
     /**
-     * Set map dimensions (without filling it)
+     * On initialise les dimensions de la carte, sans remplir avec les données
      * @param dimensions
      */
     public void setMapDimensions(byte[] dimensions) {
@@ -60,14 +68,14 @@ public class MapManager {
         // On récupère les données et on les met dans source
         int x = (int) home[0];
         int y = (int) home[1];
-        source.x = x;
-        source.y = y;
+        Coord position = new Coord(x, y);
+        positions.add(position);
     }
 
     public void setRace() {
         try {
-            int x = this.positions[0][0];
-            int y = this.positions[0][1];
+            int x = positions.get(0).x;
+            int y = positions.get(0).y;
             if (this.map[x][y].vampires > this.map[x][y].werewolves) {
                 this.race = "vampires";
             } else {
@@ -78,95 +86,104 @@ public class MapManager {
         }
     }
 
-    private void defPositions() {
-        int[][] humans = new int[0][2];
-        int[][] vampires = new int[0][2];
-        int[][] werewolves = new int[0][2];
-        for (int i = 0; i < this.map.length; i++) {
-            for (int j = 0; j < this.map[i].length; j++) {
-                if (this.map[i][j].humans > 0) {
-                    int[][] new_positions = new int[humans.length + 1][2];
-                    System.arraycopy(humans, 0, new_positions, 0, humans.length);
-                    new_positions[humans.length][0] = i;
-                    new_positions[humans.length][1] = j;
-                    humans = new_positions;
-                } else if (this.map[i][j].vampires > 0) {
-                    int[][] new_positions = new int[vampires.length + 1][2];
-                    System.arraycopy(vampires, 0, new_positions, 0, vampires.length);
-                    new_positions[vampires.length][0] = i;
-                    new_positions[vampires.length][1] = j;
-                    vampires = new_positions;
-                } else if (this.map[i][j].werewolves > 0) {
-                    int[][] new_positions = new int[werewolves.length + 1][2];
-                    System.arraycopy(werewolves, 0, new_positions, 0, werewolves.length);
-                    new_positions[werewolves.length][0] = i;
-                    new_positions[werewolves.length][1] = j;
-                    werewolves = new_positions;
-                }
-            }
-        }
-        this.human_positions = humans;
-        if (this.race == 1) {
-            this.positions = vampires;
-            this.adv_positions = werewolves;
-        } else {
-            this.positions = werewolves;
-            this.adv_positions = vampires;
-        }
-    }
+    /**
+     * Avant notre tour, on va mettre à jour notre carte avec les nouvelles positions
+     * INTERET ??????
+     */
+//    private void defPositions() {
+//        int[][] humans = new int[0][2];
+//        int[][] vampires = new int[0][2];
+//        int[][] werewolves = new int[0][2];
+//        for (int i = 0; i < this.map.length; i++) {
+//            for (int j = 0; j < this.map[i].length; j++) {
+//                if (this.map[i][j].humans > 0) {
+//                    humanPositions.add(new Coord(i, j));
+//                } else if (this.map[i][j].vampires > 0) {
+//                    int[][] new_positions = new int[vampires.length + 1][2];
+//                    System.arraycopy(vampires, 0, new_positions, 0, vampires.length);
+//                    new_positions[vampires.length][0] = i;
+//                    new_positions[vampires.length][1] = j;
+//                    vampires = new_positions;
+//                } else if (this.map[i][j].werewolves > 0) {
+//                    int[][] new_positions = new int[werewolves.length + 1][2];
+//                    System.arraycopy(werewolves, 0, new_positions, 0, werewolves.length);
+//                    new_positions[werewolves.length][0] = i;
+//                    new_positions[werewolves.length][1] = j;
+//                    werewolves = new_positions;
+//                }
+//            }
+//        }
+//        /* Update positions lists depending on which race is played. */
+//        this.humanPositions = humans;
+//        if (this.race == 1) {
+//            this.positions = vampires;
+//            this.adv_positions = werewolves;
+//        } else {
+//            this.positions = werewolves;
+//            this.adv_positions = vampires;
+//        }
+//    }
 
+    /**
+     * On joue notre tour
+     * @return
+     */
     public byte[][] chooseMove() {
-        /* Faire appel ici à toutes les méthodes utiles pour déterminer le mouvement à faire */
-        this.defPositions();
-        return this.randomMove();
+        // On fait notre mouvement
+        ArrayList<byte[]> moves = this.randomMove();
+        return moves.toArray(new byte[0][]);
     }
 
-    public byte[][] randomMove() {
+    /* For test only: a random move function. */
+    private ArrayList<byte[]> randomMove() {
         try {
-            /* Pour modéliser le temps de calcul, à retirer bien évidemment dans la version finales */
+            // Pour modéliser le temps de calcul, à retirer bien évidemment dans la version finales
             Thread.sleep(600);
-            byte[][] res = new byte[0][5];
-            for (int i = 0; i < this.positions.length; i++) {
-                int[] destination = new int[2];
-                int[] coord = this.positions[i];
-                destination[0] = coord[0];
-                destination[1] = coord[1];
+            ArrayList<byte[]> results = new ArrayList<>();
+            // Pour chacune de nos positions, faire un mouvement aléatoire
+            for (Coord source : this.positions) {
+                Coord destination = new Coord(source.x, source.y);
                 while (
-                        (destination[0] == coord[0] && destination[1] == coord[1]) ||
-                                destination[0] < 0 || destination[0] >= map.length ||
-                                destination[1] < 0 || destination[1] >= map[0].length
+                        (source.x == destination.x && source.y == destination.y) ||
+                                destination.x < 0 || destination.x >= map.length ||
+                                destination.y < 0 || destination.y >= map[0].length
                         ) {
                     Random randomGenerator = new Random();
                     int dir = randomGenerator.nextInt(8);
                     if (dir >= 1 && dir <= 3) {
-                        destination[0] = coord[0] + 1;
+                        destination.x = source.x + 1;
                     } else if (dir >= 5 && dir <= 7) {
-                        destination[0] = coord[0] - 1;
+                        destination.x = source.x - 1;
                     }
                     if (dir >= 3 && dir <= 5) {
-                        destination[1] = coord[1] + 1;
+                        destination.y = source.y + 1;
                     } else if (dir >= 7 || dir <= 1) {
-                        destination[1] = coord[1] - 1;
+                        destination.y = source.y - 1;
                     }
                 }
+
+                // On représente la possibilité de se séparer en prenant un nombre aléatoire entre 1 et 100. Si ce
+                // nombre est plus petit que le nombre de créature, seulement ce nombre est bougé, sinon on bouge tout
                 Random randomGenerator = new Random();
-                int nb_to_move = Math.min((map[coord[0]][coord[1]][1] + map[coord[0]][coord[1]][2]) , randomGenerator.nextInt(100) + 1);
+                int nbMoves = Math.min(
+                        map[source.x][source.y].vampires + map[source.x][source.y].werewolves,
+                        randomGenerator.nextInt(100) + 1
+                );
+
+                // On ajoute ce mouvement à la liste des mouvements à faire
                 byte[] move = new byte[5];
-                move[0] = (byte) coord[0];
-                move[1] = (byte) coord[1];
-                move[2] = (byte) nb_to_move;
-                move[3] = (byte) destination[0];
-                move[4] = (byte) destination[1];
-                byte[][] new_res = new byte[res.length + 1][5];
-                System.arraycopy(res, 0, new_res, 0, res.length);
-                System.arraycopy(move, 0, new_res[res.length], 0, 5);
-                res = new_res;
+                move[0] = (byte) source.x;
+                move[1] = (byte) source.y;
+                move[2] = (byte) nbMoves;
+                move[3] = (byte) destination.x;
+                move[4] = (byte) destination.y;
+                results.add(move);
             }
-            return res;
+            return results;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return new byte[0][0];
+        return new ArrayList<>();
     }
 
 }
