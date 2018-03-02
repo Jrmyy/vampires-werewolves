@@ -5,7 +5,6 @@ import java.net.Socket;
 public class TCPClient {
 
     private Socket socket;
-    private String player = "Jorubabel Le Sanglier";
     private DataOutputStream out;
     private DataInputStream in;
     private static byte[]
@@ -137,9 +136,10 @@ public class TCPClient {
     }
 
     public void sendName() {
-        //Send the player's name to the server
+        // Send the player's name to the server
         try {
-            byte[] playerName = this.player.getBytes();
+            String player = "Jorubabel Le Sanglier";
+            byte[] playerName = player.getBytes();
             byte nameLength = (byte) playerName.length;
             this.out.write(NME);
             this.out.write(nameLength);
@@ -150,7 +150,7 @@ public class TCPClient {
     }
 
     public void sendMove(byte[][] move) {
-        //Send move to the server
+        // Send move to the server
         try {
             byte nbMove = (byte) move.length;
             this.out.write(MOV);
