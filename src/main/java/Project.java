@@ -25,11 +25,11 @@ public class Project {
                     break;
                 case "MAP":
                     byte[][] content = client.listenMAP();
-                    map.fillMap(content);
+                    map.fillOrUpdateMap(content);
                     break;
                 case "UPD":
                     byte[][] update = client.listenMAP();
-                    map.fillMap(update);
+                    map.fillOrUpdateMap(update);
                     ArrayList<byte[]> moves = map.chooseMove();
                     client.sendMove(moves);
                     break;

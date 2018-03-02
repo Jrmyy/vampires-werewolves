@@ -11,9 +11,9 @@ public class MapManager {
     private ArrayList<Coord> positions = new ArrayList<>();
     private Coord home;
     // Liste des coordonées de l'adversaire
-    private ArrayList<Coord> opponentPositions;
+    private ArrayList<Coord> opponentPositions = new ArrayList<>();
     // Liste des coordonnées des humains
-    private ArrayList<Coord> humanPositions;
+    private ArrayList<Coord> humanPositions = new ArrayList<>();
     // Etat de la carte
     private Cell[][] map;
 
@@ -25,11 +25,15 @@ public class MapManager {
         // On récupère le nombre de columns et de lignes
         int rows = (int) dimensions[0];
         int cols = (int) dimensions[1];
+
         // On crée une matrice d'objets Cell
         this.map = new Cell[cols][rows];
+
         // Finalement on va instantier un nouvel objet cell dans chaque cellule de la matrice
         for(int i = 0; i < cols; i++){
+
             for(int j = 0; j < rows; j++){
+
                this.map[i][j] = new Cell();
             }
         }
@@ -39,18 +43,16 @@ public class MapManager {
      * On va remplir la map avec les différentes espèces aux différentes cases (ou updater le carte)
      * @param content
      */
-    public void fillMap(byte[][] content) {
+    public void fillOrUpdateMap(byte[][] content) {
         int x;
         int y;
         int humans;
         int vampires;
         int werewolves;
-        this.positions = new ArrayList<>();
-        this.positions.add(this.home);
-        this.opponentPositions = new ArrayList<>();
-        this.humanPositions = new ArrayList<>();
+
         // Pour chaque case
         for (byte[] aContent : content) {
+
             // On récupère la coordonnée (x,y), le nombre d'espèces, et on le met dans notre matrice de Cell
             x = (int) aContent[0];
             y = (int) aContent[1];
@@ -60,35 +62,64 @@ public class MapManager {
             this.map[x][y].fill(humans, vampires, werewolves);
             Coord coord = new Coord(x, y);
 
-            if (humans > 0) {
+            // S'il y a des humains et que la coordonnée n'est pas dans la liste des humains, on remplit
+            if (humans > 0 && !this.humanPositions.contains(coord)) {
+
                 this.humanPositions.add(coord);
-            }
 
-            if (this.race == null) {
+            } else if (this.race == null && (vampires > 0 || werewolves > 0)) {
 
-                if (vampires > 0 && coord == this.home) {
+                // Si la race est nulle (on est dans le premier remplissage) et que l'on a une créature sur la case
+                // On regarde si on a des vampires et que l'on est sur la coordonnée de départ
+                if (vampires > 0 && this.home.equals(coord)) {
+
+                    // On assigne la race vampire
                     this.setRace("vampires");
+
                 } else {
+
+                    // Dans tous les autres cas, nous sommes les loup-garous et on met la position dans la liste
+                    // des positions adverses
                     this.opponentPositions.add(coord);
                     this.setRace("werewolves");
+
                 }
 
-            } else {
+            } else if (vampires > 0 || werewolves > 0) {
 
-                if (vampires > 0 && this.race.equals("vampires")) {
-                    this.positions.add(coord);
-                } else {
-                    this.opponentPositions.add(coord);
-                }
+                // Si on a la race, on est dans une assignation update et on assigne juste en fonction de la race
+                if (
+                        (vampires > 0 && this.race.equals("vampires"))
+                        || (werewolves > 0 && this.race.equals("werewolves"))
+                    ) {
 
-                if (werewolves > 0 && this.race.equals("werewolves")) {
-                    this.positions.add(coord);
+                    // On ajoute la coordonnée que si elle n'existe pas encore
+                    if (!this.positions.contains(coord)) {
+                        this.positions.add(coord);
+                    }
+
+                    // Si la coordonnée est dans la liste des positions de l'adversaire, on la supprime parce que ça
+                    // veut dire qu'on l'a récupéré
+                    if (this.opponentPositions.contains(coord)) {
+                        this.opponentPositions.remove(coord);
+                    }
+
                 } else {
-                    this.opponentPositions.add(coord);
+
+                    // On ajoute la coordonnée que si elle n'existe pas encore
+                    if (!this.opponentPositions.contains(coord)) {
+                        this.opponentPositions.add(coord);
+                    }
+
+                    // Si la coordonnée est dans notre liste de positions, on la supprime parce que ça veut dire que
+                    // l'adversaire nous l'a prise
+                    if (this.positions.contains(coord)) {
+                        this.positions.remove(coord);
+                    }
                 }
             }
-
         }
+
     }
 
     /**
@@ -101,23 +132,12 @@ public class MapManager {
         int y = (int) home[1];
         this.home = new Coord(x, y);
         positions.add(this.home);
-        System.out.println(this.positions);
     }
 
-    public void setRace() {
-        try {
-            int x = this.positions.get(0).x;
-            int y = this.positions.get(0).y;
-            if (this.map[x][y].vampires > this.map[x][y].werewolves) {
-                this.race = "vampires";
-            } else {
-                this.race = "werewolves";
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * Assigne la bonne race lors de la première boucle de remplissage de la carte
+     * @param race
+     */
     private void setRace(String race) {
         this.race = race;
     }
@@ -141,7 +161,6 @@ public class MapManager {
             Thread.sleep(600);
             ArrayList<byte[]> results = new ArrayList<>();
             // Pour chacune de nos positions, faire un mouvement aléatoire
-            System.out.println(this.positions);
             for (Coord source : this.positions) {
                 Coord destination = new Coord(source.x, source.y);
                 while (
