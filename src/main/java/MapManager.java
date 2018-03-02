@@ -1,6 +1,4 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 import java.lang.*;
 
@@ -11,10 +9,8 @@ public class MapManager {
     private String race;
     // Liste des coordonnées pour la race que l'on joue
     private ArrayList<Coord> positions;
-    // Liste des mouvements à envoyer au serveur (format 5 bits)
-    private ArrayList<Coord> moves;
     // Liste des coordonées de l'adversaire
-    private Coord opponentPosition;
+    private ArrayList<Coord> opponentPosition;
     // Liste des coordonnées des humains
     private ArrayList<Coord> humanPositions;
     // Etat de la carte
@@ -48,6 +44,9 @@ public class MapManager {
         int humans;
         int vampires;
         int werewolves;
+        positions = new ArrayList<>();
+        opponentPosition = new ArrayList<>();
+        humanPositions = new ArrayList<>();
         // Pour chaque case
         for (byte[] aContent : content) {
             // On récupère la coordonnée (x,y), le nombre d'espèces, et on le met dans notre matrice de Cell
@@ -57,6 +56,23 @@ public class MapManager {
             vampires = (int) aContent[3];
             werewolves = (int) aContent[4];
             this.map[x][y].fill(humans, vampires, werewolves);
+            Coord coord = new Coord(x, y);
+
+            if (humans > 0) {
+                humanPositions.add(coord);
+            }
+
+            if (vampires > 0 && race.equals("vampires")) {
+                positions.add(coord);
+            } else {
+                opponentPosition.add(coord);
+            }
+
+            if (werewolves > 0 && race.equals("werewolves")) {
+                positions.add(coord);
+            } else {
+                opponentPosition.add(coord);
+            }
         }
     }
 
@@ -87,44 +103,6 @@ public class MapManager {
     }
 
     /**
-     * Avant notre tour, on va mettre à jour notre carte avec les nouvelles positions
-     * INTERET ??????
-     */
-//    private void defPositions() {
-//        int[][] humans = new int[0][2];
-//        int[][] vampires = new int[0][2];
-//        int[][] werewolves = new int[0][2];
-//        for (int i = 0; i < this.map.length; i++) {
-//            for (int j = 0; j < this.map[i].length; j++) {
-//                if (this.map[i][j].humans > 0) {
-//                    humanPositions.add(new Coord(i, j));
-//                } else if (this.map[i][j].vampires > 0) {
-//                    int[][] new_positions = new int[vampires.length + 1][2];
-//                    System.arraycopy(vampires, 0, new_positions, 0, vampires.length);
-//                    new_positions[vampires.length][0] = i;
-//                    new_positions[vampires.length][1] = j;
-//                    vampires = new_positions;
-//                } else if (this.map[i][j].werewolves > 0) {
-//                    int[][] new_positions = new int[werewolves.length + 1][2];
-//                    System.arraycopy(werewolves, 0, new_positions, 0, werewolves.length);
-//                    new_positions[werewolves.length][0] = i;
-//                    new_positions[werewolves.length][1] = j;
-//                    werewolves = new_positions;
-//                }
-//            }
-//        }
-//        /* Update positions lists depending on which race is played. */
-//        this.humanPositions = humans;
-//        if (this.race == 1) {
-//            this.positions = vampires;
-//            this.adv_positions = werewolves;
-//        } else {
-//            this.positions = werewolves;
-//            this.adv_positions = vampires;
-//        }
-//    }
-
-    /**
      * On joue notre tour
      * @return
      */
@@ -134,7 +112,10 @@ public class MapManager {
         return moves.toArray(new byte[0][]);
     }
 
-    /* For test only: a random move function. */
+    /**
+     * Mouvement aléatoire pour le moment
+     * @return
+     */
     private ArrayList<byte[]> randomMove() {
         try {
             // Pour modéliser le temps de calcul, à retirer bien évidemment dans la version finales
