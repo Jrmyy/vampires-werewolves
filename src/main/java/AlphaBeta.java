@@ -23,32 +23,52 @@ class AlphaBeta {
     }
 
     /**
-     * Calcule de l'heuristique pour une carte donnée
+     * Fonction heuristique pour un seul groupe de crétures
+     * @param map
+     * @param coord
+     * @return
+     */
+    private static double localScoreFunction(MapManager map, Coord coord) {
+        int nbCreatures;
+        int nbHumans;
+        int distance;
+        double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
+        // Facteurs à déterminer expérimentalement
+        double a = 1; // Importance dans le score des créatures effectives dans chaque camp
+        double b = 1; // Importance dans le score des humains pouvant être convertis
+        double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux humains éloignés
+        double score = 0;
+        // Score des créatures alliées sur la case
+        nbCreatures = map.map[coord.x][coord.y].population;
+        score += a * nbCreatures;
+        for (Coord humanCoord : map.humanPositions) {
+            // Score des humains à distance des créatures alliées
+            nbHumans = map.map[humanCoord.x][humanCoord.y].population;
+            distance = Math.max(Math.abs(coord.x - humanCoord.x), Math.abs(coord.y - humanCoord.y));
+            if (nbCreatures >= nbHumans){
+                nbConverted = nbHumans;
+            } else {
+                nbConverted = (nbCreatures / 2) - ((2 * nbHumans - nbCreatures) * nbCreatures / (2 * nbHumans));
+            }
+            score += b * Math.pow(phi, distance - 1) * nbConverted;
+        }
+        return score;
+    }
+
+    /**
+     * Fonction heuristique pour évaluer une situation donnée de la carte
      * @param map
      * @return
      */
     private static double heuristic(MapManager map) {
-        double result = map.population() - map.opponentPopulation();
-        for (Coord hPos: map.humanPositions) {
-            int minDistance = Integer.MAX_VALUE;
-            for (Coord pos: map.positions) {
-                if (Utils.minDistance(pos, hPos) < minDistance) {
-                    minDistance = Utils.minDistance(pos, hPos);
-                }
-            }
-            int oMinDistance = Integer.MAX_VALUE;
-            for (Coord oPos: map.opponentPositions) {
-                if (Utils.minDistance(oPos, hPos) < oMinDistance) {
-                    oMinDistance = Utils.minDistance(oPos, hPos);
-                }
-            }
-            if (minDistance <= oMinDistance) {
-                result += 1;
-            } else {
-                result -= 1;
-            }
+        double score = 0;
+        for (Coord coord : map.positions) {
+            score += AlphaBeta.localScoreFunction(map, coord);
         }
-        return result;
+        for (Coord opponentCoord : map.opponentPositions) {
+            score -= AlphaBeta.localScoreFunction(map, opponentCoord);
+        }
+        return score;
     }
 
     /**
@@ -100,8 +120,8 @@ class AlphaBeta {
                                     map.map[position.x][position.y].population,
                                     Utils.findNextMove(position, child)
                             ));
+                            interval.setInf(infValue);
                         }
-                        interval.setInf(infValue);
                     } else {
                         // Si l'infValue est nulle, on ajoute les mouvements que si on le demande et si la borne inf
                         // est nulle
@@ -126,29 +146,50 @@ class AlphaBeta {
         }
     }
 
+    /**
+     * Calcule le min pour l'alpha beta (donc pour le tour d'un adversaire)
+     * @param depth: profondeur actuelle
+     * @param map: état de la carte actuel
+     * @param alphaBetaValue: valeur min de l'interval initial
+     * @return
+     */
     private static Double alphaBetaMin(int depth, MapManager map, Double alphaBetaValue) {
+        // Si la profondeur est inférieure ou égale à 0, on calcule l'heuristique
         if (depth <= 0) {
             return heuristic(map);
         } else {
+            // On crée un nouvel interval initialisé avec null en borne inf et la valeur alphaBeta en borne sup
             AlphaBetaInterval interval = new AlphaBetaInterval(alphaBetaValue, null);
+            // Pour chacune des positions adverse, on récupère la liste de ses enfants en fonction des différentes stratégies
             HashMap<Coord, ArrayList<Coord>> allChildren = getChildrenForOpponent(map);
+            // Pour chaque coordonnée adverse
             for (Coord oPosition: allChildren.keySet()) {
+                // On va parcourir la liste des enfants possibles
                 ArrayList<Coord> children = allChildren.get(oPosition);
                 int i = 0;
+                // Tant que le nombre d'enfants n'a pas été parcouru et que l'interval n'est pas rempli convenablement
                 while (i < children.size() &&
                         (interval.getInf() == null || interval.getSup() == null || interval.getInf() < interval.getSup())
                         ) {
-
+                    // Le child représente la coordonnée que l'on vise (et donc peut être pas la coordonnée du prochain
+                    // tour si distance > 1
                     Coord child = children.get(i);
+                    // Pour ce mouvement, on va créer une nouvelle carte, impliquée par le mouvement vers la position
+                    // child
                     MapManager impliedMap = map.cloneWithMovement(oPosition, child);
                     i++;
+                    // La valeur supérieure est donc l'algo alpha beta max, avec la profondeur baissée de 1, la
+                    // nouvelle carte et la borne sup de l'interval, et pas de retour de mouvement
                     Object objectSupValue = alphaBetaMax(depth - 1, impliedMap, interval.getSup(), false);
                     if (objectSupValue instanceof Double) {
                         Double supValue = (Double) objectSupValue;
-                        interval.setSup(supValue);
+                        if (supValue < interval.getSup()) {
+                            interval.setSup(supValue);
+                        }
                     }
                 }
             }
+            // On retourne la borne
             return interval.getSup();
         }
     }
