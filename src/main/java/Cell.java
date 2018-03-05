@@ -1,30 +1,41 @@
+import java.io.Serializable;
+
 /**
  * Même but que pour la classe Coord, le but c'est d'éviter de manipuler des tableaux, pour ne pas se tromper avec les
  * indices
  */
-public class Cell {
+public class Cell implements Serializable {
 
-    public int humans;
-    public int werewolves;
-    public int vampires;
-
-    Cell(int humans, int werewolves, int vampires) {
-        this.humans = humans;
-        this.werewolves = werewolves;
-        this.vampires = vampires;
-    }
+    public String kind;
+    public int population;
 
     Cell() {
-        this.humans = 0;
-        this.werewolves = 0;
-        this.vampires = 0;
+        this.kind = "empty";
+        this.population = 0;
     }
 
-    public void fill(int humans, int werewolves, int vampires) {
-        this.humans = humans;
-        this.werewolves = werewolves;
-        this.vampires = vampires;
+    Cell(String kind, int population) {
+        this.kind = kind;
+        this.population = population;
     }
 
+    public void fill(String kind, int population) {
+        this.population = population;
+        this.kind = kind;
+    }
 
+    @Override
+    public String toString() {
+        return "Kind: " + kind + ", population: " + population;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Cell) {
+            Cell cell = (Cell) obj;
+            return this.kind.equals(cell.kind) && this.population == cell.population;
+        }
+
+        return false;
+    }
 }
