@@ -3,9 +3,9 @@
  */
 public class Result {
 
-    private Coord source;
-    private int itemsMoved;
-    private Coord destination;
+    public Coord source;
+    public int itemsMoved;
+    public Coord destination;
 
     Result(Coord source, int itemsMoved, Coord destination) {
         this.source = source;

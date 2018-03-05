@@ -155,7 +155,6 @@ public class TCPClient {
             byte nbMove = (byte) moves.size();
             this.out.write(MOV);
             this.out.write(nbMove);
-            System.out.println(nbMove);
             for (byte[] move: moves) {
                 this.out.write(move);
             }
