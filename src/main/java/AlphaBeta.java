@@ -320,13 +320,15 @@ class AlphaBeta {
             // Si la distance de la position que l'on veut ajouter est plus petite que la distance max on va chercher
             // l'élément qui répond à cette distance, le supprimer et mettre l'élément à la place
             if (Utils.minDistance(position, opp) < maxDistance) {
+                ArrayList<Coord> toRemove = new ArrayList<>();
                 for (Coord moveCoord: moves) {
                     if (Utils.minDistance(moveCoord, position) == maxDistance) {
-                        moves.remove(moveCoord);
+                        toRemove.add(moveCoord);
                     } else {
                         newMaxDistance = Math.max(newMaxDistance, Utils.minDistance(position, moveCoord));
                     }
                 }
+                moves.removeAll(toRemove);
                 // On ajoute l'élément que l'on veut
                 moves.add(opp);
                 maxDistance = newMaxDistance;
