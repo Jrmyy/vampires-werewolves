@@ -152,6 +152,60 @@ public class MapManager {
     }
 
     /**
+     * Fonction heuristique pour un seul groupe de crétures
+     * @param map
+     * @param coord
+     * @param humanPositions
+     * @return
+     */
+    private double localScoreFunction(Cell[][] map, Coord coord, ArrayList<Coord> humanPositions) {
+        int nbCreatures;
+        int nbHumans;
+        int distance;
+        double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
+        // Facteurs à déterminer expérimentalement
+        double a = 1; // Importance dans le score des créatures effectives dans chaque camp
+        double b = 1; // Importance dans le score des humains pouvant être convertis
+        double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux humains éloignés
+        double score = 0;
+        // Score des créatures alliées sur la case
+        nbCreatures = map[coord.x][coord.y].vampires + map[coord.x][coord.y].werewolves;
+        score += a * nbCreatures;
+        for (Coord humanCoord : humanPositions) {
+            // Score des humains à distance des créatures alliées
+            nbHumans = map[humanCoord.x][humanCoord.y].humans;
+            distance = Math.max(Math.abs(coord.x - humanCoord.x), Math.abs(coord.y - humanCoord.y));
+            if (nbCreatures >= nbHumans){
+                nbConverted = nbHumans;
+            } else {
+                nbConverted = (nbCreatures / 2) - ((2 * nbHumans - nbCreatures) * nbCreatures / (2 * nbHumans));
+            }
+            score += b * Math.pow(phi, distance - 1) * nbConverted;
+        }
+        return score;
+    }
+
+    /**
+     * Fonction heuristique pour évaluer une situation donnée de la carte
+     * @param map
+     * @param positions
+     * @param humanPositions
+     * @param opponentPositions
+     * @return
+     */
+    private double scoreFunction(Cell[][] map, ArrayList<Coord> positions, ArrayList<Coord> opponentPositions,
+                                 ArrayList<Coord> humanPositions) {
+        double score = 0;
+        for (Coord coord : positions) {
+            score += this.localScoreFunction(map, coord, humanPositions);
+        }
+        for (Coord opponentCoord : opponentPositions) {
+            score -= this.localScoreFunction(map, opponentCoord, humanPositions);
+        }
+        return score;
+    }
+
+    /**
      * Mouvement aléatoire pour le moment
      * @return
      */
