@@ -29,10 +29,11 @@ class AlphaBeta {
      * @param coord
      * @return
      */
-    private static double localScoreFunction(MapManager map, Coord coord) {
+    private static double localHeuristic(MapManager map, Coord coord) {
         int nbCreatures;
         int nbHumans;
         int distance;
+        double proba;
         double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
         // Facteurs à déterminer expérimentalement
         double a = 1; // Importance dans le score des créatures effectives dans chaque camp
@@ -49,7 +50,8 @@ class AlphaBeta {
             if (nbCreatures >= nbHumans){
                 nbConverted = nbHumans;
             } else {
-                nbConverted = (nbCreatures / 2) - ((2 * nbHumans - nbCreatures) * nbCreatures / (2 * nbHumans));
+                proba = nbCreatures / (2 * nbHumans);
+                nbConverted = proba * (proba * nbHumans - (1 - proba) * nbCreatures) - (1 - proba) * nbCreatures;
             }
             score += b * Math.pow(phi, distance - 1) * nbConverted;
         }
@@ -62,12 +64,47 @@ class AlphaBeta {
      * @return
      */
     private static double heuristic(MapManager map) {
+        int nbCreatures;
+        int nbOpponents;
+        int distance;
+        // Facteurs à déterminer expérimentalement
+        double c = 1; // Importance dans le score des attaques entre les deux équipes
+        double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux ennemis éloignés
+        double proba;
+        double battleGain; // Différence des pertes ennemies par nos pertes
         double score = 0;
+        // Fonction heuristique locale pour chaque case alliée
         for (Coord coord : map.positions) {
-            score += AlphaBeta.localScoreFunction(map, coord);
+            score += AlphaBeta.localHeuristic(map, coord);
         }
+        // Fonction heuristique locale pour chaque case ennemi
         for (Coord opponentCoord : map.opponentPositions) {
-            score -= AlphaBeta.localScoreFunction(map, opponentCoord);
+            score -= AlphaBeta.localHeuristic(map, opponentCoord);
+        }
+        // Fonction heuristique de rapport de force entre les cases alliés-ennemies
+        for (Coord coord : map.positions) {
+            nbCreatures = map.map[coord.x][coord.y].population;
+            for (Coord opponentCoord : map.opponentPositions) {
+                nbOpponents = map.map[opponentCoord.x][opponentCoord.y].population;
+                distance = Math.max(Math.abs(coord.x - opponentCoord.x), Math.abs(coord.y - opponentCoord.y);
+                if (nbCreatures >= 1.5 * nbOpponents) {
+                    // Cas de victoire sûre
+                    battleGain = nbOpponents;
+                } else if (nbOpponents >= 1.5 * nbCreatures) {
+                    // Cas de défaite sûre
+                    battleGain = - nbCreatures;
+                } else {
+                    // Cas de bataille
+                    if (nbCreatures > nbOpponents) {
+                        proba = (nbCreatures / nbOpponents) - 0.5;
+                    } else {
+                        proba = nbCreatures / (2 * nbOpponents);
+                    }
+                    battleGain = proba * (nbOpponents - (1 - proba) * nbCreatures)
+                            + (1 - proba) * (proba * nbOpponents - nbCreatures);
+                }
+                score += c * Math.pow(phi, distance - 1) * battleGain;
+            }
         }
         return score;
     }
