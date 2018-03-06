@@ -86,7 +86,7 @@ class AlphaBeta {
             nbCreatures = map.map[coord.x][coord.y].population;
             for (Coord opponentCoord : map.opponentPositions) {
                 nbOpponents = map.map[opponentCoord.x][opponentCoord.y].population;
-                distance = Math.max(Math.abs(coord.x - opponentCoord.x), Math.abs(coord.y - opponentCoord.y);
+                distance = Math.max(Math.abs(coord.x - opponentCoord.x), Math.abs(coord.y - opponentCoord.y));
                 if (nbCreatures >= 1.5 * nbOpponents) {
                     // Cas de victoire sûre
                     battleGain = nbOpponents;
