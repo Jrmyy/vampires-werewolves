@@ -26,6 +26,20 @@ class MapManagerTest {
     }
 
     @Test
+    void chooseMove() {
+        this.setFakeMap();
+        ArrayList<byte[]> moves = this.mapManager.chooseMove();
+        assertEquals(moves.size(), 1);
+        byte[] move = moves.get(0);
+        assertEquals(move.length, 5);
+        assertEquals(move[0], 2);
+        assertEquals(move[1], 2);
+        assertEquals(move[2], 3);
+        assertEquals(move[3], 1);
+        assertEquals(move[4], 3);
+    }
+
+    @Test
     void setHome() {
         mapManager.setHome(new byte[] {(byte) 2, (byte) 1});
         assertEquals(mapManager.home, new Coord(2, 1));
@@ -54,11 +68,12 @@ class MapManagerTest {
     @Test
     void cloneWithMovement() {
         this.setFakeMap();
-        MapManager clonedMap = this.mapManager.cloneWithMovement(new Coord(0, 0), new Coord(4, 1));
-        assertEquals(this.mapManager.positions, new ArrayList<Coord>(Collections.singletonList(new Coord(2, 2))));
-        assertEquals(clonedMap.positions, new ArrayList<Coord>(Collections.singletonList(new Coord(2, 2))));
-        assertEquals(this.mapManager.opponentPositions, new ArrayList<Coord>(Collections.singletonList(new Coord(0, 0))));
-        assertEquals(clonedMap.opponentPositions, new ArrayList<Coord>(Collections.singletonList(new Coord(1, 1))));
+        assertEquals(Utils.findNextMove(this.mapManager, new Coord(0, 0), new Coord(4, 1)), new Coord(1, 1));
+        MapManager clonedMap = this.mapManager.cloneWithMovement(new Coord(0, 0), new Coord(1, 1));
+        assertEquals(this.mapManager.positions, new ArrayList<>(Collections.singletonList(new Coord(2, 2))));
+        assertEquals(clonedMap.positions, new ArrayList<>(Collections.singletonList(new Coord(2, 2))));
+        assertEquals(this.mapManager.opponentPositions, new ArrayList<>(Collections.singletonList(new Coord(0, 0))));
+        assertEquals(clonedMap.opponentPositions, new ArrayList<>(Collections.singletonList(new Coord(1, 1))));
         assertEquals(clonedMap.humanPositions, this.mapManager.humanPositions);
         Cell[][] fakeMap = generateFakeMap(this.mapManager.cols, this.mapManager.rows);
         Cell[][] fakeMoveMap = generateFakeMoveMap(clonedMap.cols, clonedMap.rows);
@@ -75,6 +90,21 @@ class MapManagerTest {
         assertEquals(flippedMap.positions, this.mapManager.opponentPositions);
         assertEquals(flippedMap.opponentPositions, this.mapManager.positions);
         assertEquals(flippedMap.humanPositions, this.mapManager.humanPositions);
+    }
+
+    @Test
+    void chooseMovWithOpponent() {
+        this.setFakeMap();
+        MapManager flipped = this.mapManager.flip();
+        ArrayList<byte[]> moves = flipped.chooseMove();
+        byte[] move = moves.get(0);
+        assertEquals(moves.size(), 1);
+        assertEquals(move.length, 5);
+        assertEquals(move[0], 0);
+        assertEquals(move[1], 0);
+        assertEquals(move[2], 3);
+        assertEquals(move[3], 1);
+        assertEquals(move[4], 1);
     }
 
     private Cell[][] generateFakeMap(int cols, int rows) {

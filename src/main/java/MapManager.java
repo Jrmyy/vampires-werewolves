@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.lang.*;
+import java.util.HashMap;
 
 
 public class MapManager implements Serializable{
@@ -158,8 +159,9 @@ public class MapManager implements Serializable{
      */
     public ArrayList<byte[]> chooseMove() {
         ArrayList<byte[]> results = new ArrayList<>();
-        ArrayList<Result> algResults = AlphaBeta.getAlphaBetaMove(this);
-        for (Result res: algResults) {
+        HashMap<Coord, Result> algResults = AlphaBeta.getAlphaBetaMove(this);
+        for (Coord position: algResults.keySet()) {
+            Result res = algResults.get(position);
             results.add(res.parse());
         }
         return results;
@@ -213,33 +215,32 @@ public class MapManager implements Serializable{
         MapManager clonedMap = MapManager.copy(this);
 
         // On trouve la prochaine coordonnée qui nous permet d'arriver au goal en partant de origin
-        Coord nextMoveToGoal = Utils.findNextMove(origin, goal);
         Cell originCell = clonedMap.map[origin.x][origin.y];
 
         // Si la cellule d'origine nous appartient
         if (originCell.kind.equals(this.race)) {
             // On ajoute la next position à la liste de nos positions
-            clonedMap.positions.add(nextMoveToGoal);
+            clonedMap.positions.add(goal);
             // On la supprime des humains et des ennemies (on ne sait pas où elle est)
-            clonedMap.humanPositions.remove(nextMoveToGoal);
-            clonedMap.opponentPositions.remove(nextMoveToGoal);
+            clonedMap.humanPositions.remove(goal);
+            clonedMap.opponentPositions.remove(goal);
             // On déplace toutes les troupes pour le moment donc on supprime la cellule d'origine de nos positions sur
             // la carte clonée
             clonedMap.positions.remove(origin);
             // Sinon ça veut dire qu'elle appartient à l'adversaire
         } else {
             // On ajoute la next position à la liste des positions ennemies
-            clonedMap.opponentPositions.add(nextMoveToGoal);
+            clonedMap.opponentPositions.add(goal);
             // On la supprime des humains et des notres
-            clonedMap.humanPositions.remove(nextMoveToGoal);
-            clonedMap.positions.remove(nextMoveToGoal);
+            clonedMap.humanPositions.remove(goal);
+            clonedMap.positions.remove(goal);
             // On supprime la cellule d'origine des ennemies
             clonedMap.opponentPositions.remove(origin);
         }
         // Comme on bouge toutes les troupes, la cellule d'origine est vide
         clonedMap.map[origin.x][origin.y] = new Cell();
         // La next cellule devient remplie des valeurs de la cellule d'origine
-        clonedMap.map[nextMoveToGoal.x][nextMoveToGoal.y] = originCell;
+        clonedMap.map[goal.x][goal.y] = originCell;
         return clonedMap;
     }
 

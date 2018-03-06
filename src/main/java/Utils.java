@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Quelques fonctions utils
  */
@@ -19,29 +21,83 @@ public class Utils {
      * @param goal
      * @return
      */
-    public static Coord findNextMove(Coord start, Coord goal) {
+    public static Coord findNextMove(MapManager map, Coord start, Coord goal) {
 
         if (goal.equals(start)) {
             return start;
         }
 
-        if (goal.x == start.x) {
-            return new Coord(
-                    start.x,
-                    start.y + (goal.y - start.y) / Math.abs(goal.y - start.y)
-            );
+        ArrayList<Coord> adjacentCells = findAdjacentCells(map.cols, map.rows, start);
+        int minDistance = Integer.MAX_VALUE;
+        Coord bestMove = null;
+        for (Coord adj: adjacentCells) {
+            Cell startCell = map.map[start.x][start.y];
+            Cell adjCell = map.map[adj.x][adj.y];
+            if (adjCell.kind.equals(map.race)) {
+                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+                    bestMove = adj;
+                    minDistance = Utils.minDistance(adj, goal) + 1;
+                }
+            } else if (adjCell.kind.equals("humans") && adjCell.population <= startCell.population) {
+                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+                    bestMove = adj;
+                    minDistance = Utils.minDistance(adj, goal) + 1;
+                }
+            } else if (1.5 * adjCell.population <= startCell.population) {
+                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+                    bestMove = adj;
+                    minDistance = Utils.minDistance(adj, goal) + 1;
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    private static ArrayList<Coord> findAdjacentCells(Integer cols, Integer rows, Coord start) {
+
+        ArrayList<Coord> adjacentCells = new ArrayList<>();
+
+        // Nord
+        if (start.y - 1 >= 0) {
+            adjacentCells.add(new Coord(start.x, start.y - 1));
         }
 
-        if (goal.y == start.y) {
-            return new Coord(
-                    start.x + (goal.x - start.x) / Math.abs(goal.x - start.x),
-                    start.y
-            );
+        // Ouest
+        if (start.x - 1 >= 0) {
+            adjacentCells.add(new Coord(start.x - 1, start.y));
         }
 
-        return new Coord(
-                start.x + (goal.x - start.x) / Math.abs(goal.x - start.x),
-                start.y + (goal.y - start.y) / Math.abs(goal.y - start.y)
-        );
+        // Est
+        if (start.x + 1 <= cols - 1) {
+            adjacentCells.add(new Coord(start.x + 1, start.y));
+        }
+
+        // Sud
+        if (start.y + 1 <= rows - 1) {
+            adjacentCells.add(new Coord(start.x, start.y + 1));
+        }
+
+        // Nord ouest
+        if (start.y - 1 >= 0 && start.x - 1 >= 0) {
+            adjacentCells.add(new Coord(start.x - 1, start.y - 1));
+        }
+
+        // Nord est
+        if (start.y - 1 >= 0 && start.x + 1 <= cols - 1) {
+            adjacentCells.add(new Coord(start.x + 1, start.y - 1));
+        }
+
+        // Sud ouest
+        if (start.y + 1 <= rows - 1 && start.x - 1 >= 0) {
+            adjacentCells.add(new Coord(start.x - 1, start.y + 1));
+        }
+
+        // Sud est
+        if (start.y + 1 <= rows - 1 && start.x + 1 <= cols - 1) {
+            adjacentCells.add(new Coord(start.x + 1, start.y + 1));
+        }
+
+        return adjacentCells;
+
     }
 }
