@@ -2,6 +2,7 @@ package algorithm;
 
 import board.Board;
 import board.Position;
+import utils.Utils;
 
 import java.util.ArrayList;
 
@@ -89,7 +90,7 @@ public class AlphaBeta {
         double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
         // Facteurs à déterminer expérimentalement
         double a = 1; // Importance dans le score des créatures effectives dans chaque camp
-        double b = 1; // Importance dans le score des humains pouvant être convertis
+        double b = 1 / map.getHumans().size(); // Importance dans le score des humains pouvant être convertis
         double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux humains éloignés
         double score = 0;
         // Score des créatures alliées sur la case
@@ -98,16 +99,14 @@ public class AlphaBeta {
         for (Position hPosition : map.getHumans()) {
             // Score des humains à distance des créatures alliées
             nbHumans = map.getCells()[hPosition.getX()][hPosition.getY()].getPopulation();
-            distance = Math.max(Math.abs(
-                    position.getX() - hPosition.getX()), Math.abs(position.getY() - hPosition.getY()
-            ));
-            if (nbCreatures >= nbHumans){
+            distance = Utils.minDistance(position, hPosition);
+            if (nbCreatures > nbHumans){
                 nbConverted = nbHumans;
             } else {
                 proba = nbCreatures / (2 * nbHumans);
                 nbConverted = proba * (proba * nbHumans - (1 - proba) * nbCreatures) - (1 - proba) * nbCreatures;
             }
-            score += b * Math.pow(phi, distance - 1) * nbConverted;
+            score += b * Math.pow(phi, Math.pow(distance - 1, 2)) * nbConverted;
         }
         return score;
     }
@@ -122,7 +121,7 @@ public class AlphaBeta {
         int nbOpponents;
         int distance;
         // Facteurs à déterminer expérimentalement
-        double c = 1; // Importance dans le score des attaques entre les deux équipes
+        double c = 1 / map.getOpponents().size(); // Importance dans le score des attaques entre les deux équipes
         double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux ennemis éloignés
         double proba;
         double battleGain; // Différence des pertes ennemies par nos pertes
@@ -140,14 +139,11 @@ public class AlphaBeta {
             nbCreatures = map.getCells()[position.getX()][position.getY()].getPopulation();
             for (Position opponentPosition : map.getOpponents()) {
                 nbOpponents = map.getCells()[opponentPosition.getX()][opponentPosition.getY()].getPopulation();
-                distance = Math.max(
-                        Math.abs(position.getX() - opponentPosition.getY()),
-                        Math.abs(position.getY() - opponentPosition.getY())
-                );
-                if (nbCreatures >= 1.5 * nbOpponents) {
+                distance = Utils.minDistance(position, opponentPosition);
+                if (nbCreatures > 1.5 * nbOpponents) {
                     // Cas de victoire sûre
                     battleGain = nbOpponents;
-                } else if (nbOpponents >= 1.5 * nbCreatures) {
+                } else if (nbOpponents > 1.5 * nbCreatures) {
                     // Cas de défaite sûre
                     battleGain = - nbCreatures;
                 } else {
@@ -160,7 +156,7 @@ public class AlphaBeta {
                     battleGain = proba * (nbOpponents - (1 - proba) * nbCreatures)
                             + (1 - proba) * (proba * nbOpponents - nbCreatures);
                 }
-                score += c * Math.pow(phi, distance - 1) * battleGain;
+                score += c * Math.pow(phi, Math.pow(distance - 1, 2)) * battleGain;
             }
         }
         return score;

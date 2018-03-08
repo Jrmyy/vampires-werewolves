@@ -6,7 +6,6 @@ import board.Position;
 import utils.Utils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public class Node {
@@ -79,7 +78,7 @@ public class Node {
                 // grand nombre d'adversaires mais dont leur nombre <= 1.5*la taille de notre groupe
                 for (Position opp: board.getOpponents()) {
                     Cell oCell = board.getCells()[opp.getX()][opp.getY()];
-                    if (1.5 * oCell.getPopulation() <= positionCell.getPopulation()) {
+                    if (1.5 * oCell.getPopulation() < positionCell.getPopulation()) {
                         // On ajoute que si elle est plus proche que la plus lointaine des solutions si leur nombre
                         // dépasse maxElements
                         Position nextMoveToMake = Utils.findNextMove(board, currentPosition, opp);
@@ -93,7 +92,7 @@ public class Node {
                 // notre position
                 for (Position human: board.getHumans()) {
                     Cell hCell = board.getCells()[human.getX()][human.getY()];
-                    if (hCell.getPopulation() <= positionCell.getPopulation()) {
+                    if (hCell.getPopulation() < positionCell.getPopulation()) {
                         // On ajoute que si elle est plus proche que la plus lointaine des solutions si leur nombre
                         // dépasse maxElements
                         Position nextMoveToMake = Utils.findNextMove(board, currentPosition, human);
@@ -104,6 +103,13 @@ public class Node {
             case "escape":
                 // TODO
                 ArrayList<Position> positionsToEscape = Utils.findAdjacentCells(board.getCols(), board.getRows(), currentPosition);
+                ArrayList<Position> unsafeAdjacentPositions = new ArrayList<>();
+                for (Position escape: positionsToEscape) {
+                    if (!board.getCells()[escape.getX()][escape.getY()].getKind().equals("empty")) {
+                        unsafeAdjacentPositions.add(escape);
+                    }
+                }
+                positionsToEscape.removeAll(unsafeAdjacentPositions);
                 ArrayList<Position> dangerousPositions = new ArrayList<>();
                 for (Position opp: board.getOpponents()) {
                     Cell oCell = board.getCells()[opp.getX()][opp.getY()];
@@ -115,15 +121,23 @@ public class Node {
                 Position bestMove = null;
                 for (Position escape : positionsToEscape) {
                     double score = 0;
+                    int minDistance = 10000;
                     for (Position danger: dangerousPositions) {
                         score += board.getCells()[danger.getX()][danger.getY()].getPopulation() / Utils.minDistance(escape, danger);
+                        if (Utils.minDistance(escape, danger) < minDistance) {
+                            minDistance = Utils.minDistance(escape, danger);
+                        }
                     }
-                    if (score < minScore) {
+                    if (score < minScore && minDistance <= 3) {
                         minScore = score;
                         bestMove = escape;
                     }
                 }
-                return new ArrayList<>(Collections.singleton(bestMove));
+                if (bestMove != null) {
+                    return new ArrayList<>(Collections.singleton(bestMove));
+                } else {
+                    return new ArrayList<>();
+                }
             default: return new ArrayList<>();
         }
     }
