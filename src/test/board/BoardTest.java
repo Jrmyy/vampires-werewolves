@@ -27,19 +27,19 @@ class BoardTest {
         assertEquals(board.getRows(), 4);
     }
 
-//    @Test
-//    void chooseMove() {
-//        this.setFakeMap();
-//        ArrayList<byte[]> moves = this.board.chooseMove();
-//        assertEquals(moves.size(), 1);
-//        byte[] move = moves.get(0);
-//        assertEquals(move.length, 5);
-//        assertEquals(move[0], 2);
-//        assertEquals(move[1], 2);
-//        assertEquals(move[2], 3);
-//        assertEquals(move[3], 1);
-//        assertEquals(move[4], 3);
-//    }
+    @Test
+    void chooseMove() {
+        this.setFakeMap();
+        ArrayList<byte[]> moves = this.board.chooseMove();
+        assertEquals(moves.size(), 1);
+        byte[] move = moves.get(0);
+        assertEquals(move.length, 5);
+        assertEquals(move[0], 2);
+        assertEquals(move[1], 2);
+        assertEquals(move[2], 3);
+        assertEquals(move[3], 1);
+        assertEquals(move[4], 3);
+    }
 
     @Test
     void setHome() {
@@ -97,20 +97,20 @@ class BoardTest {
         assertEquals(flippedMap.getOpponent(), this.board.getUs());
     }
 
-//    @Test
-//    void chooseMovWithOpponent() {
-//        this.setFakeMap();
-//        Board flipped = this.board.flip();
-//        ArrayList<byte[]> moves = flipped.chooseMove();
-//        byte[] move = moves.get(0);
-//        assertEquals(moves.size(), 1);
-//        assertEquals(move.length, 5);
-//        assertEquals(move[0], 0);
-//        assertEquals(move[1], 0);
-//        assertEquals(move[2], 3);
-//        assertEquals(move[3], 1);
-//        assertEquals(move[4], 1);
-//    }
+    @Test
+    void chooseMovWithOpponent() {
+        this.setFakeMap();
+        Board flipped = this.board.flip();
+        ArrayList<byte[]> moves = flipped.chooseMove();
+        byte[] move = moves.get(0);
+        assertEquals(moves.size(), 1);
+        assertEquals(move.length, 5);
+        assertEquals(move[0], 0);
+        assertEquals(move[1], 0);
+        assertEquals(move[2], 3);
+        assertEquals(move[3], 1);
+        assertEquals(move[4], 1);
+    }
 
     private Cell[][] generateFakeMap(int cols, int rows) {
         Cell[][] map = new Cell[cols][rows];
