@@ -110,7 +110,7 @@ public class Board implements Serializable {
 
                     } else {
 
-                        // On ajoute la positiononnée que si elle n'existe pas encore
+                        // On ajoute la position donnée que si elle n'existe pas encore
                         if (!this.getOpponents().contains(position)) {
                             this.getOpponents().add(position);
                         }
@@ -259,7 +259,7 @@ public class Board implements Serializable {
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
         Result result = ab.algorithm(3);
-        System.out.println(Arrays.deepToString(this.cells));
+        this.setCurrentPlayer(this.getOpponent());
         return new ArrayList<>(Collections.singleton(result.parse()));
     }
 
