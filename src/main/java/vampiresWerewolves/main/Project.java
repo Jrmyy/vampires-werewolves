@@ -1,3 +1,8 @@
+package main;
+
+import board.Board;
+import tcp.TCPClient;
+
 import java.util.ArrayList;
 
 public class Project {
@@ -5,7 +10,7 @@ public class Project {
     public static void main(String[] args) throws Exception {
         TCPClient client = new TCPClient(args[0], Integer.parseInt(args[1]));
 
-        MapManager map = new MapManager();
+        Board map = new Board();
         client.sendName();
         boolean gameRunning = true;
         String order;
