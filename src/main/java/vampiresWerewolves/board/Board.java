@@ -4,9 +4,7 @@ import algorithm.AlphaBeta;
 import algorithm.Result;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 public class Board implements Serializable {
@@ -247,6 +245,10 @@ public class Board implements Serializable {
         return this.countPopulation(this.getHumans());
     }
 
+    /**
+     * @param positions
+     * @return
+     */
     private int countPopulation(ArrayList<Position> positions) {
         int pop = 0;
         for (Position position: positions) {

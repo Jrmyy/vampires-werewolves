@@ -33,6 +33,24 @@ public class Node {
                 for (String strategy: MOVEMENT_TYPES) {
                     futureMoves.addAll(this.findMoves(this.board, pos, strategy, 3));
                 }
+                System.out.println("Moves are " + futureMoves);
+                for (Position to: futureMoves) {
+                    Board impliedBoard = this.board.simulateMove(pos, to);
+                    alternatives.add(
+                            new Node(
+                                    impliedBoard,
+                                    new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to)
+                            )
+                    );
+                }
+            }
+        } else {
+            for(Position pos: this.board.getOpponents()) {
+                ArrayList<Position> futureMoves = new ArrayList<>();
+                for (String strategy: MOVEMENT_TYPES) {
+                    futureMoves.addAll(this.findMoves(this.board, pos, strategy, 3));
+                }
+                System.out.println("Moves are " + futureMoves);
                 for (Position to: futureMoves) {
                     Board impliedBoard = this.board.simulateMove(pos, to);
                     alternatives.add(
@@ -51,7 +69,6 @@ public class Node {
         ArrayList<Position> moves = new ArrayList<>();
         Cell positionCell = board.getCells()[currentPosition.getX()][currentPosition.getY()];
         int maxDistance = -1;
-        Position maxDistanceElement = null;
         System.out.println("Finding best move for strategy " + strategy + " and position " + currentPosition + " " +
                 "with population " + positionCell.getPopulation());
         switch (strategy) {
@@ -64,7 +81,7 @@ public class Node {
                         // On ajoute que si elle est plus proche que la plus lointaine des solutions si leur nombre
                         // dépasse maxElements
                         Position nextMoveToMake = Utils.findNextMove(board, currentPosition, opp);
-                        addOrNotMovePosition(currentPosition, maxElements, moves, maxDistance, nextMoveToMake);
+                        maxDistance =addOrNotMovePosition(currentPosition, maxElements, moves, maxDistance, nextMoveToMake);
                     }
                 }
                 return moves;
@@ -78,12 +95,12 @@ public class Node {
                         // On ajoute que si elle est plus proche que la plus lointaine des solutions si leur nombre
                         // dépasse maxElements
                         Position nextMoveToMake = Utils.findNextMove(board, currentPosition, human);
-                        addOrNotMovePosition(currentPosition, maxElements, moves, maxDistance, nextMoveToMake);
+                        maxDistance = addOrNotMovePosition(currentPosition, maxElements, moves, maxDistance, nextMoveToMake);
                     }
                 }
                 return moves;
             case "escape":
-                // Todo
+                // TODO
             default: return new ArrayList<>();
         }
     }

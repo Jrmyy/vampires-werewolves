@@ -98,7 +98,7 @@ class BoardTest {
     }
 
     @Test
-    void chooseMovWithOpponent() {
+    void chooseMoveWithOpponent() {
         this.setFakeMap();
         Board flipped = this.board.flip();
         ArrayList<byte[]> moves = flipped.chooseMove();
