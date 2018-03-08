@@ -1,24 +1,26 @@
+package board;
+
 import java.io.Serializable;
 
 /**
  * Petite classe pour simplement éviter de se balader avec des tableaux alors que l'on peut avoir un objet plus simple
  * à manipuler
  */
-public class Coord implements Serializable {
+public class Position implements Serializable {
 
-    public int x;
-    public int y;
+    private int x;
+    private int y;
 
-    Coord(int x, int y) {
+    public Position(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Coord) {
-            Coord coord = (Coord) obj;
-            return this.x == coord.x && this.y == coord.y;
+        if (obj instanceof Position) {
+            Position position = (Position) obj;
+            return this.x == position.x && this.y == position.y;
         }
 
         return false;
@@ -27,5 +29,13 @@ public class Coord implements Serializable {
     @Override
     public String toString() {
         return "X: " + this.x + " Y: " + this.y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 }

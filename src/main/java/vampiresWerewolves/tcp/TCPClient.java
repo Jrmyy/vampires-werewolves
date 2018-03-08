@@ -1,3 +1,5 @@
+package tcp;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -19,7 +21,7 @@ public class TCPClient {
             NME = { 'N', 'M', 'E' },
             MOV = { 'M', 'O', 'V' };
 
-    TCPClient(String host, Integer port) {
+    public TCPClient(String host, Integer port) {
         try {
             this.socket = new Socket(host, port);
             this.out = new DataOutputStream(this.socket.getOutputStream());
@@ -104,12 +106,12 @@ public class TCPClient {
     public byte[][] listenHUM() {
         try {
             byte[] nbHouses = new byte[1];
-            byte[] coordHouse = new byte[2];
+            byte[] positionHouse = new byte[2];
             this.in.read(nbHouses);
             byte[][] allHouses = new byte[nbHouses[0]][2];
             for(int i=0; i<nbHouses[0]; i++){
-                this.in.read(coordHouse);
-                allHouses[i] = coordHouse;
+                this.in.read(positionHouse);
+                allHouses[i] = positionHouse;
             }
             return allHouses;
         } catch (IOException e) {

@@ -1,20 +1,22 @@
+package board;
+
 import java.io.Serializable;
 
 /**
- * Même but que pour la classe Coord, le but c'est d'éviter de manipuler des tableaux, pour ne pas se tromper avec les
+ * Même but que pour la classe Position, le but c'est d'éviter de manipuler des tableaux, pour ne pas se tromper avec les
  * indices
  */
 public class Cell implements Serializable {
 
-    public String kind;
-    public int population;
+    private String kind;
+    private int population;
 
-    Cell() {
+    public Cell() {
         this.kind = "empty";
         this.population = 0;
     }
 
-    Cell(String kind, int population) {
+    public Cell(String kind, int population) {
         this.kind = kind;
         this.population = population;
     }
@@ -38,4 +40,13 @@ public class Cell implements Serializable {
 
         return false;
     }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public int getPopulation() {
+        return population;
+    }
+
 }
