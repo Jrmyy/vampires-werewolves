@@ -6,6 +6,8 @@ import board.Position;
 import utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class Node {
 
@@ -101,6 +103,27 @@ public class Node {
                 return moves;
             case "escape":
                 // TODO
+                ArrayList<Position> positionsToEscape = Utils.findAdjacentCells(board.getCols(), board.getRows(), currentPosition);
+                ArrayList<Position> dangerousPositions = new ArrayList<>();
+                for (Position opp: board.getOpponents()) {
+                    Cell oCell = board.getCells()[opp.getX()][opp.getY()];
+                    if (oCell.getPopulation() > positionCell.getPopulation()) {
+                        dangerousPositions.add(opp);
+                    }
+                }
+                double minScore = 1000000;
+                Position bestMove = null;
+                for (Position escape : positionsToEscape) {
+                    double score = 0;
+                    for (Position danger: dangerousPositions) {
+                        score += board.getCells()[danger.getX()][danger.getY()].getPopulation() / Utils.minDistance(escape, danger);
+                    }
+                    if (score < minScore) {
+                        minScore = score;
+                        bestMove = escape;
+                    }
+                }
+                return new ArrayList<>(Collections.singleton(bestMove));
             default: return new ArrayList<>();
         }
     }

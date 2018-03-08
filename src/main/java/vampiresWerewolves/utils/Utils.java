@@ -59,7 +59,7 @@ public class Utils {
         return bestMove;
     }
 
-    private static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
+    public static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
 
         ArrayList<Position> adjacentCells = new ArrayList<>();
 

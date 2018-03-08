@@ -56,4 +56,9 @@ public class Result {
     public void setDestination(Position destination) {
         this.destination = destination;
     }
+
+    @Override
+    public String toString() {
+        return "Moving " + this.itemsMoved + " from " + this.source.toString() + " to " + this.destination.toString();
+    }
 }

@@ -27,6 +27,7 @@ public class AlphaBeta {
      */
     public Result algorithm(int depth){
         alphaBeta(root, depth, -1000000000, 1000000000);
+        System.out.println(bestMove);
         return bestMove;
     }
 

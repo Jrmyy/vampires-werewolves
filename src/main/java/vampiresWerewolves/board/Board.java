@@ -80,46 +80,48 @@ public class Board implements Serializable {
                 if (this.getUs() == null) {
                     // Si la race est nulle (on est dans le premier remplissage) et que l'on a une créature sur la case
                     // On regarde si on a des vampires et que l'on est sur la positiononnée de départ
-                    if (vampires > 0 && this.getAllies().get(0).equals(position)) {
+                    if (vampires > 0 && this.getAllies().get(0).equals(position) || werewolves > 0 && !this.getAllies().get(0).equals(position)) {
                         // On assigne la race vampire
                         this.setUs(new Player("vampires"));
                         this.setOpponent(new Player("werewolves"));
                     } else {
                         // Dans tous les autres cas, nous sommes les loup-garous et on met la position dans la liste
                         // des positions adverses
-                        this.getOpponents().add(position);
                         this.setUs(new Player("werewolves"));
                         this.setOpponent(new Player("vampires"));
                     }
-                } else {
-                    // Si on a la race, on est dans une assignation update et on assigne juste en fonction de la race
-                    if (this.getUs().getRace().equals(kind)) {
-
-                        // On ajoute la positiononnée que si elle n'existe pas encore
-                        if (!this.getAllies().contains(position)) {
-                            this.getAllies().add(position);
-                        }
-
-                        // Si la positiononnée est dans la liste des positions de l'adversaire, on la supprime parce que ça
-                        // veut dire qu'on l'a récupéré
-                        this.getOpponents().remove(position);
-                        // Idem pour les humains
-                        this.getHumans().remove(position);
-
-                    } else {
-
-                        // On ajoute la position donnée que si elle n'existe pas encore
-                        if (!this.getOpponents().contains(position)) {
-                            this.getOpponents().add(position);
-                        }
-
-                        // Si la positiononnée est dans notre liste de positions, on la supprime parce que ça veut dire que
-                        // l'adversaire nous l'a prise
-                        this.getAllies().remove(position);
-                        // Idem pour les humains
-                        this.getHumans().remove(position);
-                    }
                 }
+                // Si on a la race, on est dans une assignation update et on assigne juste en fonction de la race
+                if (this.getUs().getRace().equals(kind)) {
+
+                    // On ajoute la positiononnée que si elle n'existe pas encore
+                    if (!this.getAllies().contains(position)) {
+                        this.getAllies().add(position);
+                    }
+
+                    // Si la positiononnée est dans la liste des positions de l'adversaire, on la supprime parce que ça
+                    // veut dire qu'on l'a récupéré
+                    this.getOpponents().remove(position);
+                    // Idem pour les humains
+                    this.getHumans().remove(position);
+
+                } else {
+
+                    // On ajoute la position donnée que si elle n'existe pas encore
+                    if (!this.getOpponents().contains(position)) {
+                        this.getOpponents().add(position);
+                    }
+
+                    // Si la positiononnée est dans notre liste de positions, on la supprime parce que ça veut dire que
+                    // l'adversaire nous l'a prise
+                    this.getAllies().remove(position);
+                    // Idem pour les humains
+                    this.getHumans().remove(position);
+                }
+            } else if (kind.equals("empty")) {
+                this.allies.remove(position);
+                this.opponents.remove(position);
+                this.humans.remove(position);
             }
             this.getCells()[x][y].fill(kind, population);
         }
