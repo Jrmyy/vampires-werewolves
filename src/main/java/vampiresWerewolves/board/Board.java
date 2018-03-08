@@ -158,7 +158,7 @@ public class Board implements Serializable {
         Cell originCell = simulated.cells[from.getX()][from.getY()];
 
         // Si la cellule d'origine nous appartient
-        if (originCell.getKind().equals(this.getUs().getRace())) {
+        if (this.getCurrentPlayer().equals(this.getUs())) {
             // On ajoute la next position à la liste de nos positions
             simulated.getAllies().add(to);
             // On la supprime des humains et des ennemies (on ne sait pas où elle est)

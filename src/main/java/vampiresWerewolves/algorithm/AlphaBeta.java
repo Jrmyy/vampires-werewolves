@@ -90,7 +90,7 @@ public class AlphaBeta {
         double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
         // Facteurs à déterminer expérimentalement
         double a = 1; // Importance dans le score des créatures effectives dans chaque camp
-        double b = 1 / map.getHumans().size(); // Importance dans le score des humains pouvant être convertis
+        double b = 0;//1 / map.getHumans().size(); // Importance dans le score des humains pouvant être convertis
         double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux humains éloignés
         double score = 0;
         // Score des créatures alliées sur la case
@@ -121,7 +121,8 @@ public class AlphaBeta {
         int nbOpponents;
         int distance;
         // Facteurs à déterminer expérimentalement
-        double c = 1 / map.getOpponents().size(); // Importance dans le score des attaques entre les deux équipes
+        System.out.println("--> Current opponent : " + map.getOpponents());
+        double c = 0;//map.getOpponents().size() != 0 ? 1 / map.getOpponents().size() : 0; // Importance dans le score des attaques entre les deux équipes
         double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux ennemis éloignés
         double proba;
         double battleGain; // Différence des pertes ennemies par nos pertes
@@ -159,6 +160,15 @@ public class AlphaBeta {
                 score += c * Math.pow(phi, Math.pow(distance - 1, 2)) * battleGain;
             }
         }
+        Position allies = null;
+        for (Position position : map.getAllies()) {
+            allies = position;
+        }
+        Position opponents = null;
+        for (Position position : map.getOpponents()) {
+            opponents = position;
+        }
+        System.out.println("Heuristic score for allies at " + allies + " and opponents at " + opponents + " : " + score);
         return score;
     }
 
