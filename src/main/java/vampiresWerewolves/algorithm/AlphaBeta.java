@@ -75,41 +75,7 @@ public class AlphaBeta {
             return beta;
         }
     }
-
-    /**
-     * Fonction heuristique pour un seul groupe de crétures
-     * @param map
-     * @param position
-     * @return
-     */
-    private static double localHeuristic(Board map, Position position) {
-        int nbCreatures;
-        int nbHumans;
-        int distance;
-        double proba;
-        double nbConverted; // Nombre d'humain convertis espérés (avec prise en compte des pertes subies)
-        // Facteurs à déterminer expérimentalement
-        double a = 1; // Importance dans le score des créatures effectives dans chaque camp
-        double b = 0;//1 / map.getHumans().size(); // Importance dans le score des humains pouvant être convertis
-        double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux humains éloignés
-        double score = 0;
-        // Score des créatures alliées sur la case
-        nbCreatures = map.getCells()[position.getX()][position.getY()].getPopulation();
-        score += a * nbCreatures;
-        for (Position hPosition : map.getHumans()) {
-            // Score des humains à distance des créatures alliées
-            nbHumans = map.getCells()[hPosition.getX()][hPosition.getY()].getPopulation();
-            distance = Utils.minDistance(position, hPosition);
-            if (nbCreatures > nbHumans){
-                nbConverted = nbHumans;
-            } else {
-                proba = nbCreatures / (2 * nbHumans);
-                nbConverted = proba * (proba * nbHumans - (1 - proba) * nbCreatures) - (1 - proba) * nbCreatures;
-            }
-            score += b * Math.pow(phi, Math.pow(distance - 1, 2)) * nbConverted;
-        }
-        return score;
-    }
+    
 
     /**
      * Fonction heuristique pour évaluer une situation donnée de la carte
@@ -117,58 +83,44 @@ public class AlphaBeta {
      * @return
      */
     private static double heuristic(Board map) {
-        int nbCreatures;
+        int minDistance;
+        int nbHumans;
+        int nbAllies;
         int nbOpponents;
-        int distance;
-        // Facteurs à déterminer expérimentalement
-        System.out.println("--> Current opponent : " + map.getOpponents());
-        double c = 0;//map.getOpponents().size() != 0 ? 1 / map.getOpponents().size() : 0; // Importance dans le score des attaques entre les deux équipes
-        double phi = 0.8; // Facteur de décroissance pour accorder moins d'importance aux ennemis éloignés
-        double proba;
-        double battleGain; // Différence des pertes ennemies par nos pertes
         double score = 0;
-        // Fonction heuristique locale pour chaque case alliée
+        // Nombre d'alliés
         for (Position position : map.getAllies()) {
-            score += AlphaBeta.localHeuristic(map, position);
+            score += map.getCells()[position.getX()][position.getY()].getPopulation();
         }
-        // Fonction heuristique locale pour chaque case ennemi
-        for (Position opponentPosition : map.getOpponents()) {
-            score -= AlphaBeta.localHeuristic(map, opponentPosition);
-        }
-        // Fonction heuristique de rapport de force entre les cases alliés-ennemies
-        for (Position position : map.getAllies()) {
-            nbCreatures = map.getCells()[position.getX()][position.getY()].getPopulation();
-            for (Position opponentPosition : map.getOpponents()) {
-                nbOpponents = map.getCells()[opponentPosition.getX()][opponentPosition.getY()].getPopulation();
-                distance = Utils.minDistance(position, opponentPosition);
-                if (nbCreatures > 1.5 * nbOpponents) {
-                    // Cas de victoire sûre
-                    battleGain = nbOpponents;
-                } else if (nbOpponents > 1.5 * nbCreatures) {
-                    // Cas de défaite sûre
-                    battleGain = - nbCreatures;
-                } else {
-                    // Cas de bataille
-                    if (nbCreatures > nbOpponents) {
-                        proba = (nbCreatures / nbOpponents) - 0.5;
-                    } else {
-                        proba = nbCreatures / (2 * nbOpponents);
-                    }
-                    battleGain = proba * (nbOpponents - (1 - proba) * nbCreatures)
-                            + (1 - proba) * (proba * nbOpponents - nbCreatures);
-                }
-                score += c * Math.pow(phi, Math.pow(distance - 1, 2)) * battleGain;
-            }
-        }
-        Position allies = null;
-        for (Position position : map.getAllies()) {
-            allies = position;
-        }
-        Position opponents = null;
+        // Nombre d'ennemis
         for (Position position : map.getOpponents()) {
-            opponents = position;
+            score -= map.getCells()[position.getX()][position.getY()].getPopulation();
         }
-        System.out.println("Heuristic score for allies at " + allies + " and opponents at " + opponents + " : " + score);
+        // Nombre d'humains avec min distance d'un groupe pouvant le convertir
+        for (Position positionHumans : map.getHumans()) {
+            nbHumans = map.getCells()[positionHumans.getX()][positionHumans.getY()].getPopulation();
+            // Alliés
+            minDistance = map.getCols() + map.getRows();
+            for (Position positionAllies : map.getAllies()) {
+                nbAllies = map.getCells()[positionAllies.getX()][positionAllies.getY()].getPopulation();
+                if (nbAllies > nbHumans) {
+                    minDistance = Math.min(minDistance, Utils.minDistance(positionHumans, positionAllies));
+                }
+            }
+            score += nbHumans / minDistance;
+            // Ennemis
+            minDistance = map.getCols() + map.getRows();
+            for (Position positionOpponents : map.getOpponents()) {
+                nbAllies = map.getCells()[positionOpponents.getX()][positionOpponents.getY()].getPopulation();
+                if (nbAllies > nbHumans) {
+                    minDistance = Math.min(minDistance, Utils.minDistance(positionHumans, positionOpponents));
+                }
+            }
+            score -= nbHumans / minDistance;
+        }
+        // Ennemis à proximité
+        // TODO
+
         return score;
     }
 
