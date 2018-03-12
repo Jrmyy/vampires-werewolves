@@ -151,7 +151,7 @@ public class TCPClient {
         }
     }
 
-    public void sendMove(ArrayList<byte[]> moves) {
+    public void sendMove(ArrayList<byte[]> moves) throws Exception {
         // Send moves to the server
         try {
             byte nbMove = (byte) moves.size();

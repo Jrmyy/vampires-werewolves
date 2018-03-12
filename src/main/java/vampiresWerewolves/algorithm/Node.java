@@ -12,14 +12,17 @@ public class Node {
 
     private Result lastMove;
 
+    private int humansEaten = 0;
+
     Node(Board board) {
         this.board = board;
         this.lastMove = new Result();
     }
 
-    private Node(Board board, Result lastMove) {
+    private Node(Board board, Result lastMove, int humansEaten) {
         this.board = board;
         this.lastMove = lastMove;
+        this.humansEaten = humansEaten;
     }
 
     public ArrayList<Node> createAlternatives() {
@@ -43,10 +46,15 @@ public class Node {
                 System.out.println("Moves for " + pos + " are " + futureMoves);
                 for (Position to: futureMoves) {
                     Board impliedBoard = this.board.simulateMove(pos, to);
+                    Cell toCell = this.board.getCells()[to.getX()][to.getY()];
+                    if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
+                        humansEaten += toCell.getPopulation();
+                    }
                     alternatives.add(
                             new Node(
                                     impliedBoard,
-                                    new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to)
+                                    new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to),
+                                    humansEaten
                             )
                     );
                 }
@@ -69,10 +77,16 @@ public class Node {
                 futureMoves.removeAll(toRemove);
                 for (Position to: futureMoves) {
                     Board impliedBoard = this.board.simulateMove(pos, to);
+                    Cell toCell = this.board.getCells()[to.getX()][to.getY()];
+                    int humansEaten = 0;
+                    if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
+                        humansEaten = toCell.getPopulation();
+                    }
                     alternatives.add(
                             new Node(
                                     impliedBoard,
-                                    new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to)
+                                    new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to),
+                                    humansEaten
                             )
                     );
                 }
@@ -93,4 +107,11 @@ public class Node {
         return lastMove;
     }
 
+    public int getHumansEaten() {
+        return humansEaten;
+    }
+
+    public void setHumansEaten(int humansEaten) {
+        this.humansEaten = humansEaten;
+    }
 }

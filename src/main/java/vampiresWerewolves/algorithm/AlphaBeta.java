@@ -12,6 +12,9 @@ public class AlphaBeta {
 
     private Result bestMove = new Result();
 
+    // Gain pour manger un groupe d'humain adjacent à nous
+    private static final double HUMAN_TRANSFORMED_ADJACENT_GAIN = 0.01;
+
     /**
      * Creates AlphaBeta with root of a search tree
      * @param rootBoard Board at the beginning of the algorithm
@@ -106,20 +109,22 @@ public class AlphaBeta {
 
             // On va maintenant viser, tant que l'on peut gagner le match à coup sur les ennemis présentant le meilleur
             // ratio nb humains / distance
+            double bestRatio = 0;
+            if (node.getHumansEaten() > 0) {
+                // A ratios égaux, on veut manger l'élément que l'on peut manger directement
+                bestRatio = node.getHumansEaten() + HUMAN_TRANSFORMED_ADJACENT_GAIN;
+            }
             for (Position human: map.getHumans()) {
-                System.out.println("Checking for ally " + ally + " ( " + map.getCells()[ally.getX()][ally.getY()] + ") and human " + human + " ( " + map.getCells()[human.getX()][human.getY()] + " ) with min distance " +  Utils.minDistance(human, ally));
                 if (map.getCells()[ally.getX()][ally.getY()].getPopulation()
                         > map.getCells()[human.getX()][human.getY()].getPopulation()) {
                     double humanPop = (double) map.getCells()[human.getX()][human.getY()].getPopulation();
-                    humanAllyScore -= Math.pow(humanPop, 1 / (double) Utils.minDistance(ally, human));
+                    bestRatio = Math.max(bestRatio, humanPop / (double) Utils.minDistance(ally, human));
                 }
             }
+            humanAllyScore += bestRatio;
         }
 
-        System.out.println("Adding ally-human " + humanAllyScore);
         score += humanAllyScore;
-
-        System.out.println("Adding adj enemy score " + adjToKillEnemy);
         score += adjToKillEnemy;
 
         System.out.println("Heuristic for move " + node.getLastMove() + " is : " + score);
