@@ -262,7 +262,7 @@ public class Board implements Serializable {
     public ArrayList<byte[]> chooseMove() {
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
-        Result result = ab.algorithm(1);
+        Result result = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
         return new ArrayList<>(Collections.singleton(result.parse()));
     }

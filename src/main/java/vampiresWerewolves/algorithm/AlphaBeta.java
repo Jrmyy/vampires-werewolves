@@ -12,9 +12,6 @@ public class AlphaBeta {
 
     private Result bestMove = new Result();
 
-    // Gain pour manger un groupe d'humain adjacent à nous
-    private static final double HUMAN_TRANSFORMED_ADJACENT_GAIN = 0.01;
-
     /**
      * Creates AlphaBeta with root of a search tree
      * @param rootBoard Board at the beginning of the algorithm
@@ -52,7 +49,7 @@ public class AlphaBeta {
                 if (temp > alpha) {
                     alpha = temp;
                     if (node == root) {
-                        bestMove = child.getLastMove();
+                        bestMove = child.getLastMoves().get(0);
                     }
                 }
 
@@ -68,7 +65,7 @@ public class AlphaBeta {
                 if (temp < beta) {
                     beta = temp;
                     if (node == root) {
-                        bestMove = child.getLastMove();
+                        bestMove = child.getLastMoves().get(0);
                     }
                 }
                 if (alpha >= beta) {
@@ -88,7 +85,7 @@ public class AlphaBeta {
      */
     private static double heuristic(Node node) {
 
-        System.out.println("Starting heuristic for move " + node.getLastMove());
+        System.out.println("Starting heuristic for move " + node.getLastMoves().get(node.getLastMoves().size() - 1));
 
         Board map = node.getBoard();
 
@@ -110,24 +107,35 @@ public class AlphaBeta {
             // On va maintenant viser, tant que l'on peut gagner le match à coup sur les ennemis présentant le meilleur
             // ratio nb humains / distance
             double bestRatio = 0;
-            if (node.getHumansEaten() > 0) {
-                // A ratios égaux, on veut manger l'élément que l'on peut manger directement
-                bestRatio = node.getHumansEaten() + HUMAN_TRANSFORMED_ADJACENT_GAIN;
-            }
             for (Position human: map.getHumans()) {
-                if (map.getCells()[ally.getX()][ally.getY()].getPopulation()
-                        > map.getCells()[human.getX()][human.getY()].getPopulation()) {
-                    double humanPop = (double) map.getCells()[human.getX()][human.getY()].getPopulation();
+                Cell humanCell = map.getCells()[human.getX()][human.getY()];
+                if (allyCell.getPopulation() > humanCell.getPopulation()) {
+                    double humanPop = (double) humanCell.getPopulation();
                     bestRatio = Math.max(bestRatio, humanPop / (double) Utils.minDistance(ally, human));
                 }
             }
             humanAllyScore += bestRatio;
         }
 
-        score += humanAllyScore;
-        score += adjToKillEnemy;
+        double adjToKillAlly = 0;
+        for (Position opp: map.getAllies()) {
+            // Si on a des ennemis à proximité que l'on peut tuer à coup sur, on doit absolument jouer ce coup
+            Cell oppCell = map.getCells()[opp.getX()][opp.getY()];
+            for (Position adj: Utils.findAdjacentCells(map.getCols(), map.getRows(), opp)) {
+                Cell adjCell = map.getCells()[adj.getX()][adj.getY()];
+                if (adjCell.getKind().equals(map.getOpponent().getRace())
+                        && 1.5 * adjCell.getPopulation() < oppCell.getPopulation()) {
+                    adjToKillAlly += 100000;
+                }
+            }
+        }
 
-        System.out.println("Heuristic for move " + node.getLastMove() + " is : " + score);
+        // On va également ajouter le nombre d'humains tués sur le chemin jusqu'à cette case
+        score += humanAllyScore + 3 * node.getHumansEaten();
+        score += adjToKillEnemy;
+        score -= adjToKillAlly;
+
+        System.out.println("Heuristic for move " + node.getLastMoves().get(node.getLastMoves().size() - 1) + " is : " + score);
         return score;
 
     }
