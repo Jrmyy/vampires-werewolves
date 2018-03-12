@@ -36,23 +36,28 @@ public class Utils {
         ArrayList<Position> adjacentCells = findAdjacentCells(map.getCols(), map.getRows(), start);
         int minDistance = Integer.MAX_VALUE;
         Position bestMove = null;
+        Cell startCell = map.getCells()[start.getX()][start.getY()];
+
+        if (adjacentCells.contains(goal)) {
+            return goal;
+        }
+
         for (Position adj: adjacentCells) {
-            Cell startCell = map.getCells()[start.getX()][start.getY()];
             Cell adjCell = map.getCells()[adj.getX()][adj.getY()];
             if (adjCell.getKind().equals(map.getUs().getRace())) {
-                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+                if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal) + 1;
+                    minDistance = Utils.minDistance(adj, goal);
                 }
-            } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() <= startCell.getPopulation()) {
-                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+            } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() < startCell.getPopulation()) {
+                if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal) + 1;
+                    minDistance = Utils.minDistance(adj, goal);
                 }
-            } else if (1.5 * adjCell.getPopulation() <= startCell.getPopulation()) {
-                if (Utils.minDistance(adj, goal) + 1 <= minDistance) {
+            } else if (1.5 * adjCell.getPopulation() < startCell.getPopulation()) {
+                if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal) + 1;
+                    minDistance = Utils.minDistance(adj, goal);
                 }
             }
         }

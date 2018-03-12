@@ -2,7 +2,7 @@ package board;
 
 import algorithm.AlphaBeta;
 import algorithm.Result;
-
+import utils.Utils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -158,7 +158,7 @@ public class Board implements Serializable {
         Cell originCell = simulated.cells[from.getX()][from.getY()];
 
         // Si la cellule d'origine nous appartient
-        if (this.getCurrentPlayer().equals(this.getUs())) {
+        if (originCell.getKind().equals(this.getUs().getRace())) {
             // On ajoute la next position à la liste de nos positions
             simulated.getAllies().add(to);
             // On la supprime des humains et des ennemies (on ne sait pas où elle est)
@@ -227,7 +227,7 @@ public class Board implements Serializable {
      * Calcule notre nombre d'éléments
      * @return
      */
-    protected int alliesPopulation() {
+    public int alliesPopulation() {
         return this.countPopulation(this.getAllies());
     }
 
@@ -235,7 +235,7 @@ public class Board implements Serializable {
      * Calcule le nombre d'éléments de l'adversaire
      * @return
      */
-    protected int opponentsPopulation() {
+    public int opponentsPopulation() {
         return this.countPopulation(this.getOpponents());
     }
 
@@ -243,7 +243,7 @@ public class Board implements Serializable {
      * Calcule le nombre d'humains
      * @return
      */
-    protected int humansPopulation() {
+    public int humansPopulation() {
         return this.countPopulation(this.getHumans());
     }
 
@@ -262,9 +262,79 @@ public class Board implements Serializable {
     public ArrayList<byte[]> chooseMove() {
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
-        Result result = ab.algorithm(5);
+        Result result = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
         return new ArrayList<>(Collections.singleton(result.parse()));
+    }
+
+    public ArrayList<byte[]> chooseAutoMove() {
+        this.setCurrentPlayer(this.getUs());
+        ArrayList<Result> results = new ArrayList<>();
+        for (Position ally: this.getAllies()) {
+            int allyPop = this.getCells()[ally.getX()][ally.getY()].getPopulation();
+            ArrayList<Position> reachableHumans = new ArrayList<>();
+            for (Position human: this.getHumans()) {
+                int humanPop = this.getCells()[human.getX()][human.getY()].getPopulation();
+                if (humanPop < allyPop) {
+                    reachableHumans.add(human);
+                }
+            }
+            if (!reachableHumans.isEmpty()) {
+                Position nextHumanToReach = new Position(-1, -1);
+                double bestRatio = 0;
+                double bestRatioPop = 0;
+                for (Position hPos: this.getHumans()) {
+                    double pop = this.getCells()[hPos.getX()][hPos.getY()].getPopulation();
+                    if (pop < allyPop) {
+                        double ratio = pop / (double) Utils.minDistance(ally, hPos);
+                        if (ratio > bestRatio || (ratio == bestRatio && pop > bestRatioPop)) {
+                            bestRatio = ratio;
+                            bestRatioPop = pop;
+                            nextHumanToReach = hPos;
+                        }
+                    }
+                }
+                results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, nextHumanToReach)));
+            } else {
+                Position nextOpponentToReach = new Position(-1, -1);
+                double bestRatio = 0;
+                double bestRatioPop = 0;
+                double smallestPop = Double.POSITIVE_INFINITY;
+                Position smallestEnemy = new Position(-1, -1);
+                for (Position oPos: this.getOpponents()) {
+                    double pop = this.getCells()[oPos.getX()][oPos.getY()].getPopulation();
+                    if (1.5 * pop < allyPop) {
+                        double ratio = pop / (double) Utils.minDistance(ally, oPos);
+                        if (ratio > bestRatio || (ratio == bestRatio && 1.5 * pop > bestRatioPop)) {
+                            bestRatio = ratio;
+                            bestRatioPop = pop;
+                            nextOpponentToReach = oPos;
+                        }
+                    } else {
+                        if (pop < smallestPop) {
+                            smallestPop = pop;
+                            smallestEnemy = oPos;
+                        }
+                    }
+                }
+                System.out.println(ally);
+                if (nextOpponentToReach.getX() == -1) {
+                    if (smallestPop >= allyPop) {
+                        System.out.println("here");
+                        results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, smallestEnemy)));
+                    }
+                } else {
+                    results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, nextOpponentToReach)));
+                }
+            }
+        }
+
+        ArrayList<byte[]> resultsToSend = new ArrayList<>();
+        for (Result res: results) {
+            resultsToSend.add(res.parse());
+        }
+        return resultsToSend;
+
     }
 
     public Player getUs() {

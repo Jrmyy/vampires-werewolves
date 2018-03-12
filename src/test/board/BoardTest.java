@@ -1,34 +1,36 @@
 package board;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 
-class BoardTest {
+public class BoardTest {
 
     private Board board;
 
-    @BeforeEach
-    void setUp() {
+    @Before
+    public void setUp() {
         this.board = new Board();
     }
 
     @Test
-    void setMapDimensions() {
+    public void setMapDimensions() {
         board.setMapDimensions(new byte[] {(byte) 4, (byte) 5});
         assertEquals(board.getCols(), 5);
         assertEquals(board.getRows(), 4);
     }
 
     @Test
-    void chooseMove() {
+    public void chooseMove() {
         this.setFakeMap();
         ArrayList<byte[]> moves = this.board.chooseMove();
         assertEquals(moves.size(), 1);
@@ -37,31 +39,31 @@ class BoardTest {
         assertEquals(move[0], 2);
         assertEquals(move[1], 2);
         assertEquals(move[2], 3);
-        assertEquals(move[3], 1);
-        assertEquals(move[4], 3);
+        assertEquals(move[3], 3);
+        assertEquals(move[4], 2);
     }
 
     @Test
-    void setHome() {
+    public void setHome() {
         board.setHome(new byte[] {(byte) 2, (byte) 1});
         assertEquals(board.getAllies().size(), 1);
         assertEquals(board.getAllies().contains(new Position(2, 1)), true);
     }
 
     @Test
-    void population() {
+    public void population() {
         this.setFakeMap();
         assertEquals(this.board.alliesPopulation(), 3);
     }
 
     @Test
-    void opponentPopulation() {
+    public void opponentPopulation() {
         this.setFakeMap();
         assertEquals(this.board.opponentsPopulation(), 3);
     }
 
     @Test
-    void humanPopulation() {
+    public void humanPopulation() {
         this.setFakeMap();
         System.out.println(this.board.getHumans());
         System.out.println(Arrays.deepToString(this.board.getCells()));
@@ -69,9 +71,12 @@ class BoardTest {
     }
 
     @Test
-    void cloneWithMovement() {
+    public void cloneWithMovement() {
         this.setFakeMap();
-        assertEquals(Utils.findNextMove(this.board, new Position(0, 0), new Position(4, 1)), new Position(1, 1));
+        assertThat(
+                Utils.findNextMove(this.board, new Position(0, 0), new Position(4, 1)),
+                anyOf(is(new Position(1, 0)), is(new Position(1, 1)))
+        );
         Board clonedMap = this.board.simulateMove(new Position(0, 0), new Position(1, 1));
         assertEquals(this.board.getAllies(), new ArrayList<>(Collections.singletonList(new Position(2, 2))));
         assertEquals(clonedMap.getAllies(), new ArrayList<>(Collections.singletonList(new Position(2, 2))));
@@ -85,7 +90,7 @@ class BoardTest {
     }
 
     @Test
-    void flip() {
+    public void flip() {
         this.setFakeMap();
         Board flippedMap = this.board.flip();
         Cell[][] fakeMap = generateFakeMap(this.board.getCols(), this.board.getRows());
@@ -98,7 +103,7 @@ class BoardTest {
     }
 
     @Test
-    void chooseMoveWithOpponent() {
+    public void chooseMoveWithOpponent() {
         this.setFakeMap();
         Board flipped = this.board.flip();
         ArrayList<byte[]> moves = flipped.chooseMove();
@@ -109,7 +114,24 @@ class BoardTest {
         assertEquals(move[1], 0);
         assertEquals(move[2], 3);
         assertEquals(move[3], 1);
-        assertEquals(move[4], 1);
+        assertEquals(move[4], 0);
+    }
+
+    @Test
+    public void findNextMove() {
+        this.setFakeMap();
+        assertThat(
+                Utils.findNextMove(this.board, new Position(2, 2), new Position(0, 3)),
+                anyOf(is(new Position(1, 3)), is(new Position(1, 2)))
+        );
+        assertEquals(
+                Utils.findNextMove(this.board, new Position(2, 2), new Position(0, 2)),
+                new Position(1,2)
+        );
+        assertEquals(
+                Utils.findNextMove(this.board, new Position(2, 2), new Position(1, 1)),
+                new Position(1,1)
+        );
     }
 
     private Cell[][] generateFakeMap(int cols, int rows) {

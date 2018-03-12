@@ -11,7 +11,7 @@ public class Result {
     private int itemsMoved;
     private Position destination;
 
-    Result(Position source, int itemsMoved, Position destination) {
+    public Result(Position source, int itemsMoved, Position destination) {
         this.source = source;
         this.itemsMoved = itemsMoved;
         this.destination = destination;

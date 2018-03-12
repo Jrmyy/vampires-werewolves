@@ -1,9 +1,9 @@
 package algorithm;
 
 import board.Board;
+import board.Cell;
 import board.Position;
 import utils.Utils;
-
 import java.util.ArrayList;
 
 public class AlphaBeta {
@@ -37,7 +37,7 @@ public class AlphaBeta {
         Board currentBoard = node.getBoard();
 
         if (depth == 0) {
-            return heuristic(currentBoard);
+            return heuristic(node);
         }
 
         ArrayList<Node> impliedBoards = node.createAlternatives();
@@ -46,15 +46,15 @@ public class AlphaBeta {
 
             for (Node child : impliedBoards) {
                 double temp = alphaBeta(child, depth - 1, alpha, beta);
-                if (alpha < temp) {
+                if (temp > alpha) {
                     alpha = temp;
                     if (node == root) {
                         bestMove = child.getLastMove();
                     }
                 }
 
-                if (beta <= alpha) {
-                    return alpha;
+                if (alpha > beta) {
+                    return beta;
                 }
             }
             return alpha;
@@ -62,16 +62,17 @@ public class AlphaBeta {
 
             for (Node child : impliedBoards) {
                 double temp = alphaBeta(child, depth - 1, alpha, beta);
-                if (beta > temp) {
+                if (temp < beta) {
                     beta = temp;
                     if (node == root) {
                         bestMove = child.getLastMove();
                     }
                 }
-                if(beta <= alpha) {
+                if (alpha >= beta) {
                     return beta;
                 }
             }
+
             return beta;
         }
     }
@@ -79,50 +80,53 @@ public class AlphaBeta {
 
     /**
      * Fonction heuristique pour évaluer une situation donnée de la carte
-     * @param map
+     * @param node
      * @return
      */
-    private static double heuristic(Board map) {
-        int minDistance;
-        int nbHumans;
-        int nbAllies;
-        int nbOpponents;
-        double score = 0;
-        // Nombre d'alliés
-        for (Position position : map.getAllies()) {
-            score += map.getCells()[position.getX()][position.getY()].getPopulation();
-        }
-        // Nombre d'ennemis
-        for (Position position : map.getOpponents()) {
-            score -= map.getCells()[position.getX()][position.getY()].getPopulation();
-        }
-        // Nombre d'humains avec min distance d'un groupe pouvant le convertir
-        for (Position positionHumans : map.getHumans()) {
-            nbHumans = map.getCells()[positionHumans.getX()][positionHumans.getY()].getPopulation();
-            // Alliés
-            minDistance = map.getCols() + map.getRows();
-            for (Position positionAllies : map.getAllies()) {
-                nbAllies = map.getCells()[positionAllies.getX()][positionAllies.getY()].getPopulation();
-                if (nbAllies > nbHumans) {
-                    minDistance = Math.min(minDistance, Utils.minDistance(positionHumans, positionAllies));
-                }
-            }
-            score += nbHumans / minDistance;
-            // Ennemis
-            minDistance = map.getCols() + map.getRows();
-            for (Position positionOpponents : map.getOpponents()) {
-                nbAllies = map.getCells()[positionOpponents.getX()][positionOpponents.getY()].getPopulation();
-                if (nbAllies > nbHumans) {
-                    minDistance = Math.min(minDistance, Utils.minDistance(positionHumans, positionOpponents));
-                }
-            }
-            score -= nbHumans / minDistance;
-        }
-        // Ennemis à proximité
-        // TODO
+    private static double heuristic(Node node) {
 
+        System.out.println("Starting heuristic for move " + node.getLastMove());
+
+        Board map = node.getBoard();
+
+        double score = map.alliesPopulation() - map.opponentsPopulation();
+
+        double humanAllyScore = 0;
+        double adjToKillEnemy = 0;
+        for (Position ally: map.getAllies()) {
+            // Si on a des ennemis à proximité que l'on peut tuer à coup sur, on doit absolument jouer ce coup
+            Cell allyCell = map.getCells()[ally.getX()][ally.getY()];
+            for (Position adj: Utils.findAdjacentCells(map.getCols(), map.getRows(), ally)) {
+                Cell adjCell = map.getCells()[adj.getX()][adj.getY()];
+                if (adjCell.getKind().equals(map.getOpponent().getRace())
+                        && 1.5 * adjCell.getPopulation() < allyCell.getPopulation()) {
+                    adjToKillEnemy += 100000;
+                }
+            }
+
+            // On va maintenant viser, tant que l'on peut gagner le match à coup sur les ennemis présentant le meilleur
+            // ratio nb humains / distance
+            for (Position human: map.getHumans()) {
+                System.out.println("Checking for ally " + ally + " ( " + map.getCells()[ally.getX()][ally.getY()] + ") and human " + human + " ( " + map.getCells()[human.getX()][human.getY()] + " ) with min distance " +  Utils.minDistance(human, ally));
+                if (map.getCells()[ally.getX()][ally.getY()].getPopulation()
+                        > map.getCells()[human.getX()][human.getY()].getPopulation()) {
+                    double humanPop = (double) map.getCells()[human.getX()][human.getY()].getPopulation();
+                    humanAllyScore -= Math.pow(humanPop, 1 / (double) Utils.minDistance(ally, human));
+                }
+            }
+        }
+
+        System.out.println("Adding ally-human " + humanAllyScore);
+        score += humanAllyScore;
+
+        System.out.println("Adding adj enemy score " + adjToKillEnemy);
+        score += adjToKillEnemy;
+
+        System.out.println("Heuristic for move " + node.getLastMove() + " is : " + score);
         return score;
+
     }
 
 
 }
+
