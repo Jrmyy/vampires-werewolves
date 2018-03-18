@@ -10,7 +10,9 @@ public class Node {
 
     private Board board;
 
-    private ArrayList<Result> lastMoves;
+    private ArrayList<Result> opponentMoves;
+
+    private ArrayList<Result> allyMoves;
 
     private int humansEaten = 0;
 
@@ -18,12 +20,15 @@ public class Node {
 
     Node(Board board) {
         this.board = board;
-        this.lastMoves = new ArrayList<>();
+        this.opponentMoves = new ArrayList<>();
+        this.allyMoves = new ArrayList<>();
     }
 
-    private Node(Board board, ArrayList<Result> lastMoves, int humansEaten, int humansEatenByOpponent) {
+    private Node(Board board, ArrayList<Result> allyMoves, ArrayList<Result> opponentMoves, int humansEaten,
+                 int humansEatenByOpponent) {
         this.board = board;
-        this.lastMoves = lastMoves;
+        this.allyMoves = allyMoves;
+        this.opponentMoves = opponentMoves;
         this.humansEaten = humansEaten;
         this.humansEatenByOpponent = humansEatenByOpponent;
     }
@@ -54,12 +59,13 @@ public class Node {
                     if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
                         humansEaten += toCell.getPopulation();
                     }
-                    ArrayList<Result> lastMoves = new ArrayList<>(this.lastMoves);
-                    lastMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
+                    ArrayList<Result> allyMoves = new ArrayList<>(this.allyMoves);
+                    allyMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
                     alternatives.add(
                             new Node(
                                     impliedBoard,
-                                    lastMoves,
+                                    allyMoves,
+                                    this.opponentMoves,
                                     humansEaten,
                                     this.humansEatenByOpponent
                             )
@@ -89,12 +95,13 @@ public class Node {
                     if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
                         humansEaten += toCell.getPopulation();
                     }
-                    ArrayList<Result> lastMoves = new ArrayList<>(this.lastMoves);
-                    lastMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
+                    ArrayList<Result> opponentMoves = new ArrayList<>(this.opponentMoves);
+                    opponentMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
                     alternatives.add(
                             new Node(
                                     impliedBoard,
-                                    lastMoves,
+                                    this.allyMoves,
+                                    opponentMoves,
                                     this.humansEaten,
                                     humansEaten
                             )
@@ -113,23 +120,20 @@ public class Node {
         this.board = board;
     }
 
-    public ArrayList<Result> getLastMoves() {
-        return lastMoves;
-    }
-
     public int getHumansEaten() {
         return humansEaten;
-    }
-
-    public void setHumansEaten(int humansEaten) {
-        this.humansEaten = humansEaten;
     }
 
     public int getHumansEatenByOpponent() {
         return humansEatenByOpponent;
     }
 
-    public void setHumansEatenByOpponent(int humansEatenByOpponent) {
-        this.humansEatenByOpponent = humansEatenByOpponent;
+    public ArrayList<Result> getOpponentMoves() {
+        return opponentMoves;
     }
+
+    public ArrayList<Result> getAllyMoves() {
+        return allyMoves;
+    }
+
 }

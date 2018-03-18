@@ -1,6 +1,6 @@
 package board;
 
-import algorithm.AlphaBeta;
+import algorithm.MinMax;
 import algorithm.Result;
 import utils.Utils;
 import java.io.*;
@@ -18,6 +18,7 @@ public class Board implements Serializable {
     private ArrayList<Position> opponents = new ArrayList<>();
     private ArrayList<Position> humans = new ArrayList<>();
     private Cell[][] cells;
+    private ArrayList<Position> lockedDestinations = new ArrayList<>();
 
     /**
      * On initialise les dimensions de la carte, sans remplir avec les données
@@ -129,7 +130,7 @@ public class Board implements Serializable {
 
     /**
      * On crée une nouvelle carte en inversant les races. Nos positions deviennent celles de l'adversaire et les
-     * positions de l'adversaire deviennent les notres. Utilisée pour la partie min du AlphaBeta
+     * positions de l'adversaire deviennent les notres. Utilisée pour la partie min du MinMax
      * @return
      */
     public Board flip() {
@@ -261,8 +262,8 @@ public class Board implements Serializable {
 
     public ArrayList<byte[]> chooseMove() {
         this.setCurrentPlayer(this.getUs());
-        AlphaBeta ab = new AlphaBeta(this);
-        Result result = ab.algorithm(3);
+        MinMax ab = new MinMax(this);
+        Result result = ab.algorithm(1);
         this.setCurrentPlayer(this.getOpponent());
         return new ArrayList<>(Collections.singleton(result.parse()));
     }

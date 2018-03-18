@@ -6,17 +6,17 @@ import board.Position;
 import utils.Utils;
 import java.util.ArrayList;
 
-public class AlphaBeta {
+public class MinMax {
 
     private Node root;
 
     private Result bestMove = new Result();
 
     /**
-     * Creates AlphaBeta with root of a search tree
+     * Creates MinMax with root of a search tree
      * @param rootBoard Board at the beginning of the algorithm
      */
-    public AlphaBeta(Board rootBoard){
+    public MinMax(Board rootBoard){
         root = new Node(rootBoard);
     }
 
