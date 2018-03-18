@@ -11,7 +11,7 @@ public class MinMax {
 
     private Node root;
 
-    private Result bestMove = new Result();
+    private ArrayList<Result> bestMove = new ArrayList<>();
 
     /**
      * Creates MinMax with root of a search tree
@@ -27,7 +27,7 @@ public class MinMax {
      *
      * @return Point found in search tree
      */
-    public Result algorithm(int depth){
+    public ArrayList<Result> algorithm(int depth){
         minMax(root, depth);
         root.logger.info("Best move chosen is " + bestMove);
         return bestMove;

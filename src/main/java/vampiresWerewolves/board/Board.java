@@ -151,7 +151,7 @@ public class Board implements Serializable {
      * @param to
      * @return
      */
-    public Board simulateMove(Position from, Position to) {
+    public Board simulateMove(Position from, Position to, int movedPopulation) {
         // On crée d'abord une copie de notre carte
         Board simulated = Board.copy(this);
 
@@ -165,7 +165,9 @@ public class Board implements Serializable {
         // Si la cellule d'origine nous appartient
         if (originCell.getKind().equals(this.getUs().getRace())) {
             newAllies.add(to);
-            newAllies.remove(from);
+            if(movedPopulation >= originCell.getPopulation()) {
+                newAllies.remove(from);
+            }
 
             newHumans.remove(to);
             newOpponents.remove(to);
@@ -177,7 +179,9 @@ public class Board implements Serializable {
             // Sinon ça veut dire qu'elle appartient à l'adversaire
         } else {
             newOpponents.add(to);
-            newOpponents.remove(from);
+            if(movedPopulation >= originCell.getPopulation()) {
+                newOpponents.remove(from);
+            }
 
             newHumans.remove(to);
             newAllies.remove(to);
@@ -186,10 +190,15 @@ public class Board implements Serializable {
             simulated.setOpponents(newOpponents);
             simulated.setAllies(newAllies);
         }
-        // Comme on bouge toutes les troupes, la cellule d'origine est vide
-        simulated.cells[from.getX()][from.getY()] = new Cell();
-        // La next cellule devient remplie des valeurs de la cellule d'origine
-        simulated.cells[to.getX()][to.getY()] = originCell;
+        // Si on bouge toutes les troupes, la cellule d'origine est vide
+        if(movedPopulation >= originCell.getPopulation()) {
+            simulated.cells[from.getX()][from.getY()] = new Cell();
+        } else {
+            simulated.cells[from.getX()][from.getY()].fill(originCell.getKind(), originCell.getPopulation() - movedPopulation);
+        }
+        // La next cellule reçoit la population déplacée
+        simulated.cells[to.getX()][to.getY()] = new Cell();
+        simulated.cells[to.getX()][to.getY()].fill(originCell.getKind(), Math.min(originCell.getPopulation(), movedPopulation));
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
         return simulated;
     }
@@ -271,9 +280,11 @@ public class Board implements Serializable {
     public ArrayList<byte[]> chooseMove() throws IOException {
         this.setCurrentPlayer(this.getUs());
         MinMax ab = new MinMax(this);
-        Result result = ab.algorithm(3);
+        ArrayList<Result> results = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
-        return new ArrayList<>(Collections.singleton(result.parse()));
+        ArrayList<byte[]> chosenMove = new ArrayList<>();
+        results.forEach(move -> chosenMove.add(move.parse()));
+        return chosenMove;
     }
 
     public ArrayList<byte[]> chooseAutoMove() {

@@ -18,7 +18,7 @@ public class Node {
 
     private Board board;
 
-    private ArrayList<Result> allyMoves;
+    private ArrayList<ArrayList<Result>> allyMoves;
 
     private int humansEaten = 0;
 
@@ -34,7 +34,7 @@ public class Node {
         this.allyMoves = new ArrayList<>();
     }
 
-    private Node(Board board, ArrayList<Result> allyMoves, int humansEaten, int humansEatenByOpponent) {
+    private Node(Board board, ArrayList<ArrayList<Result>> allyMoves, int humansEaten, int humansEatenByOpponent) {
         this.board = board;
         this.allyMoves = allyMoves;
         this.humansEaten = humansEaten;
@@ -56,15 +56,22 @@ public class Node {
             for (Position ally: goalMoves.keySet()) {
                 for (Position goal: goalMoves.get(ally)) {
                     int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
+                    int goalPop = board.getCells()[goal.getX()][goal.getY()].getPopulation();
                     Position nextMoveFromGoal = Utils.findNextMove(board, ally, goal);
                     Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     int humansEaten = this.humansEaten;
                     if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
                         humansEaten += nextMoveCell.getPopulation();
                     }
-                    Board impliedBoard = board.simulateMove(ally, nextMoveFromGoal);
-                    ArrayList<Result> newAllyMoves = new ArrayList<>(this.allyMoves);
-                    newAllyMoves.add(new Result(ally, allyPop, nextMoveFromGoal));
+                    // On choisit quelle quantité de population on déplace pour ce groupe, ce qui peut le diviser
+                    int movedPopulation = Math.min(allyPop, goalPop);
+                    Board impliedBoard = board.simulateMove(ally, nextMoveFromGoal, movedPopulation);
+                    // Les mouvements alliés sont maintenant une liste de mouvement afin de pouvoir déplacer plusieurs groupes en même temps
+                    ArrayList<ArrayList<Result>> newAllyMoves = new ArrayList<>(this.allyMoves);
+                    ArrayList<Result> thisTurnMoves = new ArrayList<>();
+                    thisTurnMoves.add(new Result(ally, movedPopulation, nextMoveFromGoal)); // Ajouter chaque groupe à déplacer durant ce tour
+                    // TODO: ajouter les mouvements effectués par les autres groupes, en particulier la deuxième partie du groupe divisé (attention alors au nombre de troupes restantes)
+                    newAllyMoves.add(thisTurnMoves);
                     alternatives.add(new Node(impliedBoard, newAllyMoves, humansEaten, this.humansEatenByOpponent));
                 }
             }
@@ -79,13 +86,16 @@ public class Node {
             for (Position opp: goalMoves.keySet()) {
                 for (Position goal: goalMoves.get(opp)) {
                     int oppPop = board.getCells()[opp.getX()][opp.getY()].getPopulation();
+                    int goalPop = board.getCells()[goal.getX()][goal.getY()].getPopulation();
                     Position nextMoveFromGoal = Utils.findNextMove(board, opp, goal);
                     Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     int humansEaten = this.humansEatenByOpponent;
                     if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
                         humansEaten += nextMoveCell.getPopulation();
                     }
-                    Board impliedBoard = board.simulateMove(opp, nextMoveFromGoal);
+                    // On choisit quelle quantité de population on déplace pour ce groupe, ce qui peut le diviser
+                    int movedPopulation = Math.min(oppPop, goalPop);
+                    Board impliedBoard = board.simulateMove(opp, nextMoveFromGoal, movedPopulation);
                     alternatives.add(new Node(impliedBoard, this.allyMoves, this.humansEaten, humansEaten));
                 }
             }
@@ -142,7 +152,7 @@ public class Node {
         return new ArrayList<>();
     }
 
-    public ArrayList<Result> getAllyMoves() {
+    public ArrayList<ArrayList<Result>> getAllyMoves() {
         return allyMoves;
     }
 

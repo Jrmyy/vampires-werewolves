@@ -152,6 +152,15 @@ public class TCPClient {
     }
 
     public void sendMove(ArrayList<byte[]> moves) throws Exception {
+        // SEULEMENT POUR MOI : AFIN D'AVOIR LE TEMPS DE VOIR CE QUI SE PASSE SUR LE SERVEUR SOUS WINDOWS
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
         // Send moves to the server
         try {
             byte nbMove = (byte) moves.size();
