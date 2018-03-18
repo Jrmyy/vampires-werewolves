@@ -1,7 +1,6 @@
 package algorithm;
 
 import board.Board;
-import board.Cell;
 import board.Position;
 import utils.Utils;
 

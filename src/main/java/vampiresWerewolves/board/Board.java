@@ -2,7 +2,6 @@ package board;
 
 import algorithm.MinMax;
 import algorithm.Result;
-import javafx.geometry.Pos;
 import utils.Utils;
 import java.io.*;
 import java.util.ArrayList;
