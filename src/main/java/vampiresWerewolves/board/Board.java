@@ -2,6 +2,7 @@ package board;
 
 import algorithm.MinMax;
 import algorithm.Result;
+import javafx.geometry.Pos;
 import utils.Utils;
 import java.io.*;
 import java.util.ArrayList;
@@ -158,25 +159,33 @@ public class Board implements Serializable {
         // On trouve la prochaine positiononnée qui nous permet d'arriver au goal en partant de origin
         Cell originCell = simulated.cells[from.getX()][from.getY()];
 
+        ArrayList<Position> newAllies = new ArrayList<>(this.getAllies());
+        ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
+        ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
+
         // Si la cellule d'origine nous appartient
         if (originCell.getKind().equals(this.getUs().getRace())) {
-            // On ajoute la next position à la liste de nos positions
-            simulated.getAllies().add(to);
-            // On la supprime des humains et des ennemies (on ne sait pas où elle est)
-            simulated.getHumans().remove(to);
-            simulated.getOpponents().remove(to);
-            // On déplace toutes les troupes pour le moment donc on supprime la cellule d'origine de nos positions sur
-            // la carte clonée
-            simulated.getAllies().remove(from);
+            newAllies.add(to);
+            newAllies.remove(from);
+
+            newHumans.remove(to);
+            newOpponents.remove(to);
+
+            simulated.setHumans(newHumans);
+            simulated.setOpponents(newOpponents);
+            simulated.setAllies(newAllies);
+
             // Sinon ça veut dire qu'elle appartient à l'adversaire
         } else {
-            // On ajoute la next position à la liste des positions ennemies
-            simulated.getOpponents().add(to);
-            // On la supprime des humains et des notres
-            simulated.getHumans().remove(to);
-            simulated.getAllies().remove(to);
-            // On supprime la cellule d'origine des ennemies
-            simulated.getOpponents().remove(from);
+            newOpponents.add(to);
+            newOpponents.remove(from);
+
+            newHumans.remove(to);
+            newAllies.remove(to);
+
+            simulated.setHumans(newHumans);
+            simulated.setOpponents(newOpponents);
+            simulated.setAllies(newAllies);
         }
         // Comme on bouge toutes les troupes, la cellule d'origine est vide
         simulated.cells[from.getX()][from.getY()] = new Cell();
@@ -260,10 +269,10 @@ public class Board implements Serializable {
         return pop;
     }
 
-    public ArrayList<byte[]> chooseMove() {
+    public ArrayList<byte[]> chooseMove() throws IOException {
         this.setCurrentPlayer(this.getUs());
         MinMax ab = new MinMax(this);
-        Result result = ab.algorithm(1);
+        Result result = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
         return new ArrayList<>(Collections.singleton(result.parse()));
     }

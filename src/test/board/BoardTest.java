@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import utils.Utils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +31,7 @@ public class BoardTest {
     }
 
     @Test
-    public void chooseMove() {
+    public void chooseMove() throws IOException {
         this.setFakeMap();
         ArrayList<byte[]> moves = this.board.chooseMove();
         assertEquals(moves.size(), 1);
@@ -103,7 +104,7 @@ public class BoardTest {
     }
 
     @Test
-    public void chooseMoveWithOpponent() {
+    public void chooseMoveWithOpponent() throws IOException {
         this.setFakeMap();
         Board flipped = this.board.flip();
         ArrayList<byte[]> moves = flipped.chooseMove();

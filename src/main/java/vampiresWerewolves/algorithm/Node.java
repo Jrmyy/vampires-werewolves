@@ -4,13 +4,19 @@ import board.Board;
 import board.Cell;
 import board.Position;
 import utils.Utils;
-import java.util.ArrayList;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Node {
 
-    private Board board;
+    public static Logger logger = Logger.getLogger("my logger");
 
-    private ArrayList<Result> opponentMoves;
+    private Board board;
 
     private ArrayList<Result> allyMoves;
 
@@ -18,97 +24,73 @@ public class Node {
 
     private int humansEatenByOpponent = 0;
 
-    Node(Board board) {
+    private static final String[] MOVEMENT_TYPES = {"transform"};
+
+    Node(Board board) throws IOException {
+        Handler fh = new FileHandler("logs/myLog_" + board.getCurrentPlayer().getRace() +".log");
+        fh.setFormatter(new SimpleFormatter());
+        logger.addHandler(fh);
         this.board = board;
-        this.opponentMoves = new ArrayList<>();
         this.allyMoves = new ArrayList<>();
     }
 
-    private Node(Board board, ArrayList<Result> allyMoves, ArrayList<Result> opponentMoves, int humansEaten,
-                 int humansEatenByOpponent) {
+    private Node(Board board, ArrayList<Result> allyMoves, int humansEaten, int humansEatenByOpponent) {
         this.board = board;
         this.allyMoves = allyMoves;
-        this.opponentMoves = opponentMoves;
         this.humansEaten = humansEaten;
         this.humansEatenByOpponent = humansEatenByOpponent;
     }
 
     public ArrayList<Node> createAlternatives() {
         ArrayList<Node> alternatives = new ArrayList<>();
-        if (this.board.getCurrentPlayer().equals(this.board.getUs())) {
-            for(Position pos: this.board.getAllies()) {
-                Cell originCell = this.board.getCells()[pos.getX()][pos.getY()];
-                ArrayList<Position> futureMoves = Utils.findAdjacentCells(this.board.getCols(), this.board.getRows(), pos);
-                ArrayList<Position> toRemove = new ArrayList<>();
-                for (Position futureMove: futureMoves) {
-                    Cell futureMoveCell = this.board.getCells()[futureMove.getX()][futureMove.getY()];
-                    if (
-                            (futureMoveCell.getKind().equals("humans")
-                                    && (futureMoveCell.getPopulation() >= originCell.getPopulation())
-                            ) ||
-                                    futureMoveCell.getKind().equals(this.board.getOpponent().getRace())
-                                            && !(1.5 * futureMoveCell.getPopulation() <= originCell.getPopulation())
-                        ) toRemove.add(futureMove);
+        HashMap<Position, ArrayList<Position>> goalMoves = new HashMap<>();
+
+        if (board.getCurrentPlayer().equals(board.getUs())) {
+            for (Position ally: board.getAllies()) {
+                for (String strategy: MOVEMENT_TYPES) {
+                    goalMoves.put(ally, this.findBestMoveForStrategy(strategy, ally));
                 }
-                futureMoves.removeAll(toRemove);
-                System.out.println("Moves for " + pos + " are " + futureMoves);
-                for (Position to: futureMoves) {
-                    Board impliedBoard = this.board.simulateMove(pos, to);
-                    Cell toCell = this.board.getCells()[to.getX()][to.getY()];
+                logger.info("Wants to reach : " + goalMoves.get(ally));
+            }
+
+            for (Position ally: goalMoves.keySet()) {
+                for (Position goal: goalMoves.get(ally)) {
+                    int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
+                    Position nextMoveFromGoal = Utils.findNextMove(board, ally, goal);
+                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     int humansEaten = this.humansEaten;
-                    if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
-                        humansEaten += toCell.getPopulation();
+                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
+                        humansEaten += nextMoveCell.getPopulation();
                     }
-                    ArrayList<Result> allyMoves = new ArrayList<>(this.allyMoves);
-                    allyMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
-                    alternatives.add(
-                            new Node(
-                                    impliedBoard,
-                                    allyMoves,
-                                    this.opponentMoves,
-                                    humansEaten,
-                                    this.humansEatenByOpponent
-                            )
-                    );
+                    Board impliedBoard = board.simulateMove(ally, nextMoveFromGoal);
+                    ArrayList<Result> newAllyMoves = new ArrayList<>(this.allyMoves);
+                    newAllyMoves.add(new Result(ally, allyPop, nextMoveFromGoal));
+                    alternatives.add(new Node(impliedBoard, newAllyMoves, humansEaten, this.humansEatenByOpponent));
                 }
             }
         } else {
-            for(Position pos: this.board.getOpponents()) {
-                Cell originCell = this.board.getCells()[pos.getX()][pos.getY()];
-                ArrayList<Position> futureMoves = Utils.findAdjacentCells(this.board.getCols(), this.board.getRows(), pos);
-                ArrayList<Position> toRemove = new ArrayList<>();
-                for (Position futureMove: futureMoves) {
-                    Cell futureMoveCell = this.board.getCells()[futureMove.getX()][futureMove.getY()];
-                    if (
-                            futureMoveCell.getKind().equals("humans")
-                                    && futureMoveCell.getPopulation() >= originCell.getPopulation() ||
-                                    (futureMoveCell.getKind().equals(this.board.getOpponent().getRace())
-                                            && !(1.5 * futureMoveCell.getPopulation() <= originCell.getPopulation())
-                                    )
-                            ) toRemove.add(futureMove);
+            for (Position opp: board.getOpponents()) {
+                for (String strategy: MOVEMENT_TYPES) {
+                    goalMoves.put(opp, this.findBestMoveForStrategy(strategy, opp));
                 }
-                futureMoves.removeAll(toRemove);
-                for (Position to: futureMoves) {
-                    Board impliedBoard = this.board.simulateMove(pos, to);
-                    Cell toCell = this.board.getCells()[to.getX()][to.getY()];
+                logger.info("Enemy wants to reach : " + goalMoves.get(opp));
+            }
+
+            for (Position opp: goalMoves.keySet()) {
+                for (Position goal: goalMoves.get(opp)) {
+                    int oppPop = board.getCells()[opp.getX()][opp.getY()].getPopulation();
+                    Position nextMoveFromGoal = Utils.findNextMove(board, opp, goal);
+                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     int humansEaten = this.humansEatenByOpponent;
-                    if (toCell.getPopulation() > 0 && toCell.getKind().equals("humans")) {
-                        humansEaten += toCell.getPopulation();
+                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
+                        humansEaten += nextMoveCell.getPopulation();
                     }
-                    ArrayList<Result> opponentMoves = new ArrayList<>(this.opponentMoves);
-                    opponentMoves.add(new Result(pos, this.board.getCells()[pos.getX()][pos.getY()].getPopulation(), to));
-                    alternatives.add(
-                            new Node(
-                                    impliedBoard,
-                                    this.allyMoves,
-                                    opponentMoves,
-                                    this.humansEaten,
-                                    humansEaten
-                            )
-                    );
+                    Board impliedBoard = board.simulateMove(opp, nextMoveFromGoal);
+                    alternatives.add(new Node(impliedBoard, this.allyMoves, this.humansEaten, humansEaten));
                 }
             }
         }
+
         return alternatives;
     }
 
@@ -120,6 +102,50 @@ public class Node {
         this.board = board;
     }
 
+    private ArrayList<Position> findBestMoveForStrategy(String movement, Position position) {
+        switch (movement) {
+            case "attack":
+            case "transform":
+                int population = board.getCells()[position.getX()][position.getY()].getPopulation();
+                ArrayList<Position> keptPositions = new ArrayList<>();
+                double minRatio = Double.POSITIVE_INFINITY;
+                for (Position human: board.getHumans()) {
+                    int humanPop = board.getCells()[human.getX()][human.getY()].getPopulation();
+                    if (population >= humanPop) {
+                        double ratio = (double) humanPop / (double) Utils.minDistance(human, position);
+                        if (keptPositions.size() < 3) {
+                            keptPositions.add(human);
+                            minRatio = Math.min(minRatio, ratio);
+                        } else {
+                            if (ratio > minRatio) {
+                                ArrayList<Position> removedPositions = new ArrayList<>();
+                                double newMinRatio = Double.POSITIVE_INFINITY;
+                                for (Position pos: keptPositions) {
+                                    int posPop = board.getCells()[pos.getX()][pos.getY()].getPopulation();
+                                    double posRatio = (double) posPop / (double) Utils.minDistance(pos, position);
+                                    if (posRatio == minRatio) {
+                                        removedPositions.add(pos);
+                                    } else {
+                                        newMinRatio = Math.min(newMinRatio, posRatio);
+                                    }
+                                }
+                                keptPositions.removeAll(removedPositions);
+                                keptPositions.add(human);
+                                minRatio = Math.min(newMinRatio, ratio);
+                            }
+                        }
+                    }
+                }
+                return keptPositions;
+            case "escape":
+        }
+        return new ArrayList<>();
+    }
+
+    public ArrayList<Result> getAllyMoves() {
+        return allyMoves;
+    }
+
     public int getHumansEaten() {
         return humansEaten;
     }
@@ -127,13 +153,4 @@ public class Node {
     public int getHumansEatenByOpponent() {
         return humansEatenByOpponent;
     }
-
-    public ArrayList<Result> getOpponentMoves() {
-        return opponentMoves;
-    }
-
-    public ArrayList<Result> getAllyMoves() {
-        return allyMoves;
-    }
-
 }

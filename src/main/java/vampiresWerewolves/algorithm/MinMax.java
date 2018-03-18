@@ -4,6 +4,8 @@ import board.Board;
 import board.Cell;
 import board.Position;
 import utils.Utils;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MinMax {
@@ -16,7 +18,7 @@ public class MinMax {
      * Creates MinMax with root of a search tree
      * @param rootBoard Board at the beginning of the algorithm
      */
-    public MinMax(Board rootBoard){
+    public MinMax(Board rootBoard) throws IOException {
         root = new Node(rootBoard);
     }
 
@@ -28,6 +30,7 @@ public class MinMax {
      */
     public Result algorithm(int depth){
         minMax(root, depth);
+        root.logger.info("Best move chosen is " + bestMove);
         return bestMove;
     }
 
@@ -48,6 +51,7 @@ public class MinMax {
                 if (temp > bestValue) {
                     bestValue = temp;
                     if (node == root) {
+                        root.logger.info("Heuristic for max for best move is " + bestValue);
                         bestMove = child.getAllyMoves().get(0);
                     }
                 }
@@ -103,7 +107,7 @@ public class MinMax {
                 }
             }
 
-            if (minDistAlly < minDistOpponent) {
+            if ((minDistAlly < minDistOpponent) || (minDistAlly == minDistOpponent && map.getCurrentPlayer().equals(map.getUs()))) {
                 score += (double) humanPop / Math.max(1, minDistAlly);
             } else {
                 score -= (double) humanPop / Math.max(1, minDistOpponent);
@@ -122,7 +126,7 @@ public class MinMax {
                 }
             }
 
-            if (minDistance < Double.POSITIVE_INFINITY) {
+            if (minDistance <= 2 || (minDistance == 1 && map.getCurrentPlayer().equals(map.getUs()))) {
                 int allyPop = map.getCells()[ally.getX()][ally.getY()].getPopulation();
                 int opponentPop = map.getCells()[opponent.getX()][opponent.getY()].getPopulation();
 
@@ -137,6 +141,11 @@ public class MinMax {
                 }
             }
         }
+
+        score += 2 * node.getHumansEaten();
+        score -= 2 * node.getHumansEatenByOpponent();
+
+        node.logger.info("Heuristic for move " + node.getAllyMoves().get(0) + " is " + score);
 
         return score;
 
