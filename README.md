@@ -51,6 +51,13 @@ A chacun de notre tour, le programme réagit de la manière suivante:
 
 #### 3.4. L'heuristique <a name="heuristic"></a>
 
-<p align="center">
-  <img src="./report/heuristic_full.png"/>
-</p>
+Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:
+
+<figure>
+  <p align="center">
+    <img src="./report/heuristic_full.png"/>
+  </p>
+  <p align="center">
+    <figcaption>Fig1. - Formule utilisée pour évaluer une carte.</figcaption>
+  </p>
+</figure>
