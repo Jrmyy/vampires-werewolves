@@ -18,7 +18,6 @@ public class Board implements Serializable {
     private ArrayList<Position> opponents = new ArrayList<>();
     private ArrayList<Position> humans = new ArrayList<>();
     private Cell[][] cells;
-    private ArrayList<Position> lockedDestinations = new ArrayList<>();
 
     /**
      * On initialise les dimensions de la carte, sans remplir avec les données
@@ -145,51 +144,71 @@ public class Board implements Serializable {
     }
 
     /**
-     * Crée une copie de la carte, avant la simulation d'un mouvement de l'origine vers le next move qui mène à notre
-     * goal
-     * @param from
-     * @param to
+     * Crée une copie de la carte, avant la simulation de plusieurs mouvements
+     * @param moves
      * @return
      */
-    public Board simulateMove(Position from, Position to) {
+    public Board simulateMoves(ArrayList<Result> moves) {
+
         // On crée d'abord une copie de notre carte
         Board simulated = Board.copy(this);
 
-        // On trouve la prochaine positiononnée qui nous permet d'arriver au goal en partant de origin
-        Cell originCell = simulated.cells[from.getX()][from.getY()];
+        for (Result move: moves) {
+            Position from = move.getSource();
+            Position to = move.getDestination();
 
-        ArrayList<Position> newAllies = new ArrayList<>(this.getAllies());
-        ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
-        ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
+            // On trouve la prochaine positiononnée qui nous permet d'arriver au goal en partant de origin
+            Cell originCell = simulated.cells[from.getX()][from.getY()];
+            Cell toCell = simulated.cells[to.getX()][to.getY()];
 
-        // Si la cellule d'origine nous appartient
-        if (originCell.getKind().equals(this.getUs().getRace())) {
-            newAllies.add(to);
-            newAllies.remove(from);
+            ArrayList<Position> newAllies = new ArrayList<>(this.getAllies());
+            ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
+            ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
 
-            newHumans.remove(to);
-            newOpponents.remove(to);
+            // Si la cellule d'origine nous appartient
+            if (originCell.getKind().equals(this.getUs().getRace())) {
+                newAllies.add(to);
 
-            simulated.setHumans(newHumans);
-            simulated.setOpponents(newOpponents);
-            simulated.setAllies(newAllies);
+                if (originCell.getPopulation() == move.getItemsMoved()) {
+                    newAllies.remove(from);
+                }
 
-            // Sinon ça veut dire qu'elle appartient à l'adversaire
-        } else {
-            newOpponents.add(to);
-            newOpponents.remove(from);
+                newHumans.remove(to);
+                newOpponents.remove(to);
 
-            newHumans.remove(to);
-            newAllies.remove(to);
+                simulated.setHumans(newHumans);
+                simulated.setOpponents(newOpponents);
+                simulated.setAllies(newAllies);
 
-            simulated.setHumans(newHumans);
-            simulated.setOpponents(newOpponents);
-            simulated.setAllies(newAllies);
+                // Sinon ça veut dire qu'elle appartient à l'adversaire
+            } else {
+                newOpponents.add(to);
+                if (originCell.getPopulation() == move.getItemsMoved()) {
+                    newOpponents.remove(from);
+                }
+
+                newHumans.remove(to);
+                newAllies.remove(to);
+
+                simulated.setHumans(newHumans);
+                simulated.setOpponents(newOpponents);
+                simulated.setAllies(newAllies);
+            }
+            // La next cellule devient remplie des valeurs de la quantité bougée (plus la population de la cellule sur laquelle on arrive)
+            if (!toCell.getKind().equals(this.getOpponent().getRace())) {
+                simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved() + toCell.getPopulation());
+            } else {
+                simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved());
+            }
+
+            // Comme on bouge toutes les troupes, la cellule d'origine est vide
+            if (originCell.getPopulation() > move.getItemsMoved()) {
+                simulated.cells[from.getX()][from.getY()] = new Cell(originCell.getKind(), originCell.getPopulation() - move.getItemsMoved());
+            } else {
+                simulated.cells[from.getX()][from.getY()] = new Cell();
+            }
         }
-        // Comme on bouge toutes les troupes, la cellule d'origine est vide
-        simulated.cells[from.getX()][from.getY()] = new Cell();
-        // La next cellule devient remplie des valeurs de la cellule d'origine
-        simulated.cells[to.getX()][to.getY()] = originCell;
+
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
         return simulated;
     }
@@ -271,79 +290,11 @@ public class Board implements Serializable {
     public ArrayList<byte[]> chooseMove() throws IOException {
         this.setCurrentPlayer(this.getUs());
         MinMax ab = new MinMax(this);
-        Result result = ab.algorithm(3);
+        ArrayList<Result> results = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
-        return new ArrayList<>(Collections.singleton(result.parse()));
-    }
-
-    public ArrayList<byte[]> chooseAutoMove() {
-        this.setCurrentPlayer(this.getUs());
-        ArrayList<Result> results = new ArrayList<>();
-        for (Position ally: this.getAllies()) {
-            int allyPop = this.getCells()[ally.getX()][ally.getY()].getPopulation();
-            ArrayList<Position> reachableHumans = new ArrayList<>();
-            for (Position human: this.getHumans()) {
-                int humanPop = this.getCells()[human.getX()][human.getY()].getPopulation();
-                if (humanPop < allyPop) {
-                    reachableHumans.add(human);
-                }
-            }
-            if (!reachableHumans.isEmpty()) {
-                Position nextHumanToReach = new Position(-1, -1);
-                double bestRatio = 0;
-                double bestRatioPop = 0;
-                for (Position hPos: this.getHumans()) {
-                    double pop = this.getCells()[hPos.getX()][hPos.getY()].getPopulation();
-                    if (pop < allyPop) {
-                        double ratio = pop / (double) Utils.minDistance(ally, hPos);
-                        if (ratio > bestRatio || (ratio == bestRatio && pop > bestRatioPop)) {
-                            bestRatio = ratio;
-                            bestRatioPop = pop;
-                            nextHumanToReach = hPos;
-                        }
-                    }
-                }
-                results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, nextHumanToReach)));
-            } else {
-                Position nextOpponentToReach = new Position(-1, -1);
-                double bestRatio = 0;
-                double bestRatioPop = 0;
-                double smallestPop = Double.POSITIVE_INFINITY;
-                Position smallestEnemy = new Position(-1, -1);
-                for (Position oPos: this.getOpponents()) {
-                    double pop = this.getCells()[oPos.getX()][oPos.getY()].getPopulation();
-                    if (1.5 * pop < allyPop) {
-                        double ratio = pop / (double) Utils.minDistance(ally, oPos);
-                        if (ratio > bestRatio || (ratio == bestRatio && 1.5 * pop > bestRatioPop)) {
-                            bestRatio = ratio;
-                            bestRatioPop = pop;
-                            nextOpponentToReach = oPos;
-                        }
-                    } else {
-                        if (pop < smallestPop) {
-                            smallestPop = pop;
-                            smallestEnemy = oPos;
-                        }
-                    }
-                }
-                System.out.println(ally);
-                if (nextOpponentToReach.getX() == -1) {
-                    if (smallestPop >= allyPop) {
-                        System.out.println("here");
-                        results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, smallestEnemy)));
-                    }
-                } else {
-                    results.add(new Result(ally, allyPop, Utils.findNextMove(this, ally, nextOpponentToReach)));
-                }
-            }
-        }
-
-        ArrayList<byte[]> resultsToSend = new ArrayList<>();
-        for (Result res: results) {
-            resultsToSend.add(res.parse());
-        }
-        return resultsToSend;
-
+        ArrayList<byte[]> parsedResults = new ArrayList<>();
+        results.forEach(move -> parsedResults.add(move.parse()));
+        return parsedResults;
     }
 
     public Player getUs() {

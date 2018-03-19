@@ -5,9 +5,7 @@ import board.Cell;
 import board.Position;
 import board.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 
 public class TestProject {
 

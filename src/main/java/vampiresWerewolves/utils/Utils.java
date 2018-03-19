@@ -22,7 +22,7 @@ public class Utils {
     }
 
     /**
-     * Avec une positiononnée de départ et une positiononnée d'arrivée, calcule sur quelle case aller au prochain mouvement
+     * Avec une position de départ et une position d'arrivée, calcule sur quelle case aller au prochain mouvement
      * @param start
      * @param goal
      * @return
@@ -47,24 +47,24 @@ public class Utils {
             if (adjCell.getKind().equals(map.getUs().getRace())) {
                 if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal);
+                    minDistance = Utils.minDistance(adj, goal) + 1;
                 }
-            } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() < startCell.getPopulation()) {
+            } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() <= startCell.getPopulation()) {
                 if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal);
+                    minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             } else if (1.5 * adjCell.getPopulation() < startCell.getPopulation()) {
                 if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
-                    minDistance = Utils.minDistance(adj, goal);
+                    minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             }
         }
         return bestMove;
     }
 
-    public static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
+    private static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
 
         ArrayList<Position> adjacentCells = new ArrayList<>();
 
