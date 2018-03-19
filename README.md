@@ -51,4 +51,6 @@ A chacun de notre tour, le programme réagit de la manière suivante:
 
 #### 3.4. L'heuristique <a name="heuristic"></a>
 
-<span style="display:block;text-align:center">![Heuristique globale](./report/heuristic_full.png "Heuristique globale")</span>
+<p align="center">
+  <img src="./report/heuristic_full.png"/>
+</p>
