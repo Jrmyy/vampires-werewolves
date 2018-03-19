@@ -80,11 +80,7 @@ public class Node {
                         for (Result eMove: earlyMoves) {
                             int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()]
                                     .getPopulation();
-                            if (minPopToSplit >= Math.min(minHumanPop, 1.5 * minOppPop) &&
-                                    (allyPop - minPopToSplit) >= Math.min(minHumanPop, 1.5 * minOppPop)
-                                ) {
-                                earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
-                            }
+                            earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                         }
                         allMoves.addAll(earlyMovesSplit);
                         allMoves.addAll(earlyMoves);

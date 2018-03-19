@@ -1,52 +1,54 @@
-# Introduction to Artificial Intelligence 
+# Rapport projet d'intelligence artificielle 
 
-IA to play turn-based game for school project in IS3030AB at Centrale Supelec 
+Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".
 
 ### Table of content: 
-+ **[1. Getting Started]**
-    + **[1.1 Prerequisites]**
-    + **[1.2 Structure of code]**
-+ **[2. Report]**
-    + **[2.1 The Algorithm implementation]**
-    + **[2.2 The Heuristic]**
-    + **[2.3 Ideas for improvment]**
-+ **[3. Authors]**
++ **[1. Prérequis]**
++ **[2. La structure du code]**
++ **[3. L'implémentation de l'algorithme MinMax]**
+  + **[3.1. Le déroulé général]**
+  + **[3.2. La création des alternatives/branches]**
+  + **[3.3. Séparation et rassemblement]**
+  + **[3.4. L'heuristique]**
++ **[4. Idées d'amélioration]**
 
-## 1. Getting started
+## 1. Prérequis
 
-### 1.1 Prerequisites
+Afin de pouvoir lancer l'IA, il vous suffit d'avoir, sur la machine, Java 8.
 
-What things you need to start the IA :
-* Java
-* 
+## 2. La structure du code
 
-Run the script below to:
-```
-$
-```
+Le code est construit autour de 5 packages:
 
+- **utils :** Ce package n'est composé que d'une seule case, la classe `Utils`, une classe statique fournissant quelques fonctions utilisables par d'autres packages. On y retrouve notamment des fonctions pour calculer le prochain mouvement, supprimer des duplicats, ...
+- **tcp :** Ce package contient le client TCP implémenté dans le but de communiquer avec le serveur. Son rôle sera donc de comprendre les trames envoyées par le serveur et d'envoyer des trames compréhensibles par le serveur avec nos mouvements pendant la partie.
+- **main :** Ce package contient la classe `Project` qui est lancée par le fichier d'exécution, il s'agit du point d'entrée du programme. Il va écouter en permanence le client et assurer de transmettre les bonnes informations aux classes qui implémentent la logique métier.
+- **board :** Ce package donne une représentation en objet du jeu. Il contient donc 4 classes : 
+  - `Board`: Cette classe est une représentation du plateau de jeu, et contient la liste des positions de chacune des espèces, ainsi que le contenu de chacune des cellules de la carte.
+  - `Position`: Cette classe représente une position sur la carte, et est donc donnée par deux coordonnées x et y.
+  - `Player`: Définie par une race, cette classe permet de définir les deux joueurs et de savoir qui est le joueur actif lors du déroulé de l'algorithme MinMax.
+  - `Cell`: Cette classe représente le contenu d'une cellule de la carte. Elle est donc définie par une race qui la peuple et par une population.
+- **algorithm :** Ce package contient toute l'intelligence de notre programme, l'algorithme qui est exécuté à chacun de nos tours et visant à fournir le meilleur déplacement possible:
+  - `Result`: Cette classe est une représentation d'un résultat de mouvement, et se constitue donc d'une position source, d'une destination, et d'un nombre d'unités déplacées.
+  - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme MinMax et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
+  - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. 
+  
+## 3. L'implémentation de l'algorithme MinMax
 
-### 1.2 Structure of code 
+#### 3.1. Le déroulé général
 
-- Environment representation is handled by MapManager.java
+A chacun de notre tour, le programme réagit de la manière suivante:
 
-- The algorithm and the heuristic can be found in Alphabeta.java
+1. A chaque tour, on récupère la trame d'update de la carte et on appelle alors la méthode `fillOrUpdate` de `Board` **(Board L. 54)**. Cette méthode est appelée au début de la partie pour créer toute la carte mais également à chaque tour afin de garder la carte dans la même état que le serveur.
+2. Une fois la carte mise à jour, on va envoyer nos mouvements. Pour se faire, la classe `Board` va instantier une instance de `MinMax` avec comme racine de l'arbre la carte courante, avant notre tour de jeu. **(Board, L. 299)**
+3. On va alors appeler la méthode `algorithm` de `MinMax` à une profondeur 3. **(Board L. 300)**
+4. Cette fonction va simplement appeler `minMax` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(MinMax L. 31)**
+5. 
 
-- TCPClient.java handles communication with the server 
+#### 3.2. La création des alternatives/branches
 
-## 2. Report
+#### 3.3. Séparation et rassemblement
 
-### 2.1 The Algorithm implementation
+#### 3.4. L'heuristique
 
-
-
-### 2.2 The Heuristic 
-
-### 2.3 Ideas for improvment 
-
-## Authors 
-* Jérémy Dénéchaud 
-* Jérémy Guiselin 
-* Mounia Slassi 
-* Pauline 
-* Jessica Cohen 
+![Heuristique globale](./report/heuristic_full.png "Heuristique globale")
