@@ -3,20 +3,20 @@
 Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".
 
 ### Table of content: 
-+ **[1. Prérequis]**
-+ **[2. La structure du code]**
-+ **[3. L'implémentation de l'algorithme MinMax]**
-  + **[3.1. Le déroulé général]**
-  + **[3.2. La création des alternatives/branches]**
-  + **[3.3. Séparation et rassemblement]**
-  + **[3.4. L'heuristique]**
-+ **[4. Idées d'amélioration]**
++ **[1. Prérequis](#prerequisites)**
++ **[2. La structure du code](#code_structure)**
++ **[3. L'implémentation de l'algorithme MinMax](#alg_implementation)**
+  + **[3.1. Le déroulé général](#general_behavior)**
+  + **[3.2. La création des alternatives/branches](#branches)**
+  + **[3.3. Séparation et rassemblement](#split_merge)**
+  + **[3.4. L'heuristique](#heuristic)**
++ **[4. Idées d'amélioration](#next_steps)**
 
-## 1. Prérequis
+### 1. Prérequis  <a name="prerequisites"></a>
 
 Afin de pouvoir lancer l'IA, il vous suffit d'avoir, sur la machine, Java 8.
 
-## 2. La structure du code
+### 2. La structure du code <a name="code_structure"></a>
 
 Le code est construit autour de 5 packages:
 
@@ -33,9 +33,9 @@ Le code est construit autour de 5 packages:
   - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme MinMax et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
   - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. 
   
-## 3. L'implémentation de l'algorithme MinMax
+### 3. L'implémentation de l'algorithme MinMax <a name="alg_implementation"></a>
 
-#### 3.1. Le déroulé général
+#### 3.1. Le déroulé général <a name="general_behavior"></a>
 
 A chacun de notre tour, le programme réagit de la manière suivante:
 
@@ -45,10 +45,10 @@ A chacun de notre tour, le programme réagit de la manière suivante:
 4. Cette fonction va simplement appeler `minMax` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(MinMax L. 31)**
 5. 
 
-#### 3.2. La création des alternatives/branches
+#### 3.2. La création des alternatives/branches <a name="branches"></a>
 
-#### 3.3. Séparation et rassemblement
+#### 3.3. Séparation et rassemblement <a name="split_merge"></a>
 
-#### 3.4. L'heuristique
+#### 3.4. L'heuristique <a name="heuristic"></a>
 
-![Heuristique globale](./report/heuristic_full.png "Heuristique globale")
+<span style="display:block;text-align:center">![Heuristique globale](./report/heuristic_full.png "Heuristique globale")</span>
