@@ -60,7 +60,7 @@ public class Utils {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
-            } else if (1.5 * adjCell.getPopulation() < itemsMoved) {
+            } else if (adjCell.getKind().equals(map.getOpponent().getRace()) && 1.5 * adjCell.getPopulation() < itemsMoved) {
                 if (Utils.minDistance(adj, goal) < minDistance) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;

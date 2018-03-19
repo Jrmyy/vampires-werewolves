@@ -18,4 +18,9 @@ public class Player implements Serializable {
     public boolean equals(Object obj) {
         return obj instanceof Player && this.race.equals(((Player) obj).getRace());
     }
+
+    @Override
+    public String toString() {
+        return this.race;
+    }
 }

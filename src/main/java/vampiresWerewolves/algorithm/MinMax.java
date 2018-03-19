@@ -43,7 +43,7 @@ public class MinMax {
 
         ArrayList<Node> impliedBoards = node.createAlternatives();
 
-        if (currentBoard.getCurrentPlayer() == currentBoard.getUs()) {
+        if (currentBoard.getCurrentPlayer().equals(currentBoard.getUs())) {
             double bestValue = Double.NEGATIVE_INFINITY;
             for (Node child : impliedBoards) {
                 double temp = minMax(child, depth - 1);
@@ -128,7 +128,6 @@ public class MinMax {
             if (minDistance <= 2 || (minDistance == 1 && map.getCurrentPlayer().equals(map.getUs()))) {
                 int allyPop = map.getCells()[ally.getX()][ally.getY()].getPopulation();
                 int opponentPop = map.getCells()[opponent.getX()][opponent.getY()].getPopulation();
-
                 if (allyPop > 1.5 * opponentPop) {
                     score += opponentPop / Math.max(1, minDistance);
                 } else if (1.5 * allyPop < opponentPop) {

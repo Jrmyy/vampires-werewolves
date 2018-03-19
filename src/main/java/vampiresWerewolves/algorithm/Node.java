@@ -24,7 +24,7 @@ public class Node {
 
     private int humansEatenByOpponent = 0;
 
-    private static final String[] MOVEMENT_TYPES = {"transform", "attack"};
+    private static final String[] MOVEMENT_TYPES = {"transform"};
 
     Node(Board board) throws IOException {
         Handler fh = new FileHandler("logs/myLog_" + board.getCurrentPlayer().getRace() +".log");
@@ -80,8 +80,8 @@ public class Node {
                         for (Result eMove: earlyMoves) {
                             int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()]
                                     .getPopulation();
-                            if (minPopToSplit >= Math.min(minHumanPop, minOppPop) &&
-                                    (allyPop - minPopToSplit) >= Math.min(minHumanPop, minOppPop)
+                            if (minPopToSplit >= Math.min(minHumanPop, 1.5 * minOppPop) &&
+                                    (allyPop - minPopToSplit) >= Math.min(minHumanPop, 1.5 * minOppPop)
                                 ) {
                                 earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                             }
@@ -122,12 +122,7 @@ public class Node {
             for (Position opp: board.getOpponents()) {
                 ArrayList<Result> allMoves = new ArrayList<>();
                 for (String strategy: MOVEMENT_TYPES) {
-                    if (strategy.equals("early_game")) {
-                        ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, opp);
-                        allMoves.addAll(earlyMoves);
-                    } else {
-                        allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
-                    }
+                    allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
                 }
                 goalMoves.put(opp, Utils.dropDuplicates(allMoves));
                 logger.info("Enemy wants to reach : " + goalMoves.get(opp) + " from " + opp);

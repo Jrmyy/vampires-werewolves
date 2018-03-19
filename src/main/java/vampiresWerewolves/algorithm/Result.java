@@ -66,12 +66,19 @@ public class Result {
     public boolean equals(Object obj) {
         if (obj instanceof Result) {
             Result res = (Result) obj;
-            System.out.println(res.getSource().equals(this.getSource()));
-            System.out.println(this.getDestination().equals(res.getDestination()));
-            System.out.println(this.getItemsMoved() == res.getItemsMoved());
             return res.getSource().equals(this.getSource()) && this.getDestination().equals(res.getDestination()) && this.getItemsMoved() == res.getItemsMoved();
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(this.itemsMoved);
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + this.getSource().hashCode() + this.getDestination().hashCode() + (int) (temp ^ (temp >>> 32));
+        return result;
     }
 }

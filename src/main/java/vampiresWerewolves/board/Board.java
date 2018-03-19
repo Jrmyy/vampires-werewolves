@@ -5,6 +5,7 @@ import algorithm.Result;
 import utils.Utils;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 public class Board implements Serializable {
@@ -18,6 +19,11 @@ public class Board implements Serializable {
     private ArrayList<Position> opponents = new ArrayList<>();
     private ArrayList<Position> humans = new ArrayList<>();
     private Cell[][] cells;
+
+    @Override
+    public String toString() {
+        return "Current player is " + this.getCurrentPlayer() + "\n" + "We have allies at : " + this.allies + "\n" + "We have opponents at : " + this.opponents + "\n" + "We have humans at : " + this.humans + "\n" + "Board is : " + Arrays.deepToString(this.cells);
+    }
 
     /**
      * On initialise les dimensions de la carte, sans remplir avec les données
@@ -195,7 +201,7 @@ public class Board implements Serializable {
                 simulated.setAllies(newAllies);
             }
             // La next cellule devient remplie des valeurs de la quantité bougée (plus la population de la cellule sur laquelle on arrive)
-            if (!toCell.getKind().equals(this.getOpponent().getRace())) {
+            if (toCell.getKind().equals("humans") || toCell.getKind().equals("empty") || toCell.getKind().equals(originCell.getKind())) {
                 simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved() + toCell.getPopulation());
             } else {
                 simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved());
@@ -210,6 +216,7 @@ public class Board implements Serializable {
         }
 
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
+        System.out.println("Current player after simulation is " + simulated.getCurrentPlayer() + " while before simulation " + this.getCurrentPlayer());
         return simulated;
     }
 
@@ -298,7 +305,7 @@ public class Board implements Serializable {
     }
 
     private int getMinPop(ArrayList<Position> specie) {
-        int minPop = 10000000;
+        int minPop = Integer.MAX_VALUE;
         for (Position pos: specie) {
             minPop = Math.min(this.cells[pos.getX()][pos.getY()].getPopulation(), minPop);
         }
