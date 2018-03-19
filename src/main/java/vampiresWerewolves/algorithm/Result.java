@@ -61,4 +61,17 @@ public class Result {
     public String toString() {
         return "Moving " + this.itemsMoved + " from " + this.source.toString() + " to " + this.destination.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Result) {
+            Result res = (Result) obj;
+            System.out.println(res.getSource().equals(this.getSource()));
+            System.out.println(this.getDestination().equals(res.getDestination()));
+            System.out.println(this.getItemsMoved() == res.getItemsMoved());
+            return res.getSource().equals(this.getSource()) && this.getDestination().equals(res.getDestination()) && this.getItemsMoved() == res.getItemsMoved();
+        }
+
+        return false;
+    }
 }

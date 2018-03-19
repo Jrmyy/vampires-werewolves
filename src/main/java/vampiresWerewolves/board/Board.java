@@ -297,6 +297,22 @@ public class Board implements Serializable {
         return parsedResults;
     }
 
+    private int getMinPop(ArrayList<Position> specie) {
+        int minPop = 10000000;
+        for (Position pos: specie) {
+            minPop = Math.min(this.cells[pos.getX()][pos.getY()].getPopulation(), minPop);
+        }
+        return minPop;
+    }
+
+    public int getMinHumanPop() {
+        return getMinPop(this.humans);
+    }
+
+    public int getMinOppPop() {
+        return getMinPop(this.opponents);
+    }
+
     public Player getUs() {
         return us;
     }

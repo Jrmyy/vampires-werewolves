@@ -24,7 +24,7 @@ public class Node {
 
     private int humansEatenByOpponent = 0;
 
-    private static final String[] MOVEMENT_TYPES = {"early_game"};
+    private static final String[] MOVEMENT_TYPES = {"transform", "attack"};
 
     Node(Board board) throws IOException {
         Handler fh = new FileHandler("logs/myLog_" + board.getCurrentPlayer().getRace() +".log");
@@ -68,17 +68,21 @@ public class Node {
         HashMap<Position, ArrayList<Result>> goalMoves = new HashMap<>();
 
         if (board.getCurrentPlayer().equals(board.getUs())) {
+            int minHumanPop = board.getMinHumanPop();
+            int minOppPop = board.getMinOppPop();
             for (Position ally: board.getAllies()) {
                 int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                 ArrayList<Result> allMoves = new ArrayList<>();
                 for (String strategy: MOVEMENT_TYPES) {
-                    if (strategy.equals("early_game")) {
+                    if (strategy.equals("transform")) {
                         ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, ally);
                         ArrayList<Result> earlyMovesSplit = new ArrayList<>();
                         for (Result eMove: earlyMoves) {
                             int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()]
                                     .getPopulation();
-                            if (2 * minPopToSplit <= allyPop) {
+                            if (minPopToSplit >= Math.min(minHumanPop, minOppPop) &&
+                                    (allyPop - minPopToSplit) >= Math.min(minHumanPop, minOppPop)
+                                ) {
                                 earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                             }
                         }
@@ -88,19 +92,19 @@ public class Node {
                         allMoves.addAll(this.findBestMoveForStrategy(strategy, ally));
                     }
                 }
-                goalMoves.put(ally, allMoves);
+                goalMoves.put(ally, Utils.dropDuplicates(allMoves));
                 logger.info("We want to reach : " + goalMoves.get(ally) + " from " + ally);
             }
 
             List<ArrayList<Result>> moves = computeAllMoves(goalMoves);
 
-            System.out.println("Moves computed for ally are " + moves);
+            logger.info("Moves computed for ally are " + moves);
 
             for (ArrayList<Result> resultedMoves: moves) {
                 ArrayList<Result> realMoves = new ArrayList<>();
                 int humansEaten = this.humansEaten;
                 for (Result res: resultedMoves) {
-                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination());
+                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
                     Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
                         humansEaten += nextMoveCell.getPopulation();
@@ -125,19 +129,19 @@ public class Node {
                         allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
                     }
                 }
-                goalMoves.put(opp, allMoves);
+                goalMoves.put(opp, Utils.dropDuplicates(allMoves));
                 logger.info("Enemy wants to reach : " + goalMoves.get(opp) + " from " + opp);
             }
 
             List<ArrayList<Result>> moves = computeAllMoves(goalMoves);
 
-            System.out.println("Moves computed for opp are " + moves);
+           logger.info("Moves computed for opp are " + moves);
 
             for (ArrayList<Result> resultedMoves: moves) {
                 ArrayList<Result> realMoves = new ArrayList<>();
                 int humansEaten = this.humansEatenByOpponent;
                 for (Result res: resultedMoves) {
-                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination());
+                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
                     Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
                     if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
                         humansEaten += nextMoveCell.getPopulation();
@@ -166,7 +170,7 @@ public class Node {
         ArrayList<Position> keptPositions = new ArrayList<>();
         double minRatio = Double.POSITIVE_INFINITY;
         switch (movement) {
-            case "late_game":
+            case "attack":
                 // En late game, il va falloir attaquer les ennemis
                 Double minOpponentPop = Double.POSITIVE_INFINITY;
                 Position minOpponent = null;
@@ -204,7 +208,7 @@ public class Node {
                     // petite de l'ennemi, on tente le tout pour le tout et on attaque
                     keptPositions.add(minOpponent);
                 }
-            case "early_game":
+            case "transform":
                 // En début de partie, le but sera de grossir le plus possible et donc de manger le plus d'humains
                 // possibles
                 for (Position human: board.getHumans()) {

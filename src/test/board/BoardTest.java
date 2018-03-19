@@ -18,7 +18,7 @@ public class BoardTest {
 
     private Board board;
 
-    @Before
+    /**@Before
     public void setUp() {
         this.board = new Board();
     }
@@ -88,7 +88,7 @@ public class BoardTest {
         Cell[][] fakeMoveMap = generateFakeMoveMap(clonedMap.getCols(), clonedMap.getRows());
         assertArrayEquals(this.board.getCells(), fakeMap);
         assertArrayEquals(clonedMap.getCells(), fakeMoveMap);
-    }**/
+    }
 
     @Test
     public void flip() {
@@ -213,5 +213,5 @@ public class BoardTest {
         )));
         map.setCells(generateFakeMap(map.getCols(), map.getRows()));
         this.board = map;
-    }
+    }**/
 }
