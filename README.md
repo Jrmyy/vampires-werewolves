@@ -111,3 +111,9 @@ Où la fonction `score` est déterminée de la manière suivante:
 Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(MinMax L. 117 - L. 141)**.
 
 ### 5. Idées d'amélioration <a name="next_steps"></a>
+
+Afin d'améliorer notre IA, nous aurions également pu: 
+- Elaguer notre algorithme MinMax, pour le transformer en algorithme Alpha Beta, ce qui économiserait du temps de calcul
+- Entrainer plusieurs algorithmes (AlphaBeta, SSS...) pour déterminer le plus efficace sur un nombre représentatif de parties
+- Mieux choisir les branches étudiées lors de l'execution de l'algorithme MinMax
+- Augmenter la profondeur de l'arbre pour évaluer plus de coups de l'adversaire et mieux comparer les différents scénarios possibles
