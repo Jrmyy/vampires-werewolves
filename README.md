@@ -1,6 +1,6 @@
 # Rapport projet d'intelligence artificielle 
 
-Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".
+<p align="justify">Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".</p>
 
 ### Table of content: 
 + **[1. Prérequis](#prerequisites)**
@@ -14,11 +14,11 @@ Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer
 
 ### 1. Prérequis  <a name="prerequisites"></a>
 
-Afin de pouvoir lancer l'IA, il vous suffit d'avoir, sur la machine, Java 8.
+<p align="justify">Afin de pouvoir lancer l'IA, il vous suffit d'avoir, sur la machine, Java 8.</p>
 
 ### 2. La structure du code <a name="code_structure"></a>
 
-Le code est construit autour de 5 packages:
+<p align="justify">Le code est construit autour de 5 packages:
 
 - **utils :** Ce package n'est composé que d'une seule case, la classe `Utils`, une classe statique fournissant quelques fonctions utilisables par d'autres packages. On y retrouve notamment des fonctions pour calculer le prochain mouvement, supprimer des duplicats, ...
 - **tcp :** Ce package contient le client TCP implémenté dans le but de communiquer avec le serveur. Son rôle sera donc de comprendre les trames envoyées par le serveur et d'envoyer des trames compréhensibles par le serveur avec nos mouvements pendant la partie.
@@ -31,19 +31,19 @@ Le code est construit autour de 5 packages:
 - **algorithm :** Ce package contient toute l'intelligence de notre programme, l'algorithme qui est exécuté à chacun de nos tours et visant à fournir le meilleur déplacement possible:
   - `Result`: Cette classe est une représentation d'un résultat de mouvement, et se constitue donc d'une position source, d'une destination, et d'un nombre d'unités déplacées.
   - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme MinMax et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
-  - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. 
+  - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. </p>
   
 ### 3. L'implémentation de l'algorithme MinMax <a name="alg_implementation"></a>
 
 #### 3.1. Le déroulé général <a name="general_behavior"></a>
 
-A chacun de notre tour, le programme réagit de la manière suivante:
+<p align="justify">A chacun de notre tour, le programme réagit de la manière suivante:
 
 1. A chaque tour, on récupère la trame d'update de la carte et on appelle alors la méthode `fillOrUpdate` de `Board` **(Board L. 54)**. Cette méthode est appelée au début de la partie pour créer toute la carte mais également à chaque tour afin de garder la carte dans la même état que le serveur.
 2. Une fois la carte mise à jour, on va envoyer nos mouvements. Pour se faire, la classe `Board` va instantier une instance de `MinMax` avec comme racine de l'arbre la carte courante, avant notre tour de jeu. **(Board, L. 299)**
 3. On va alors appeler la méthode `algorithm` de `MinMax` à une profondeur 3. **(Board L. 300)**
 4. Cette fonction va simplement appeler `minMax` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(MinMax L. 31)**
-5. 
+</p>
 
 #### 3.2. La création des alternatives/branches <a name="branches"></a>
 
@@ -51,7 +51,7 @@ A chacun de notre tour, le programme réagit de la manière suivante:
 
 #### 3.4. L'heuristique <a name="heuristic"></a>
 
-Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:
+<p align="justify">Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:</p>
 
 <figure>
   <p align="center">
