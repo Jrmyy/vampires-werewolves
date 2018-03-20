@@ -68,3 +68,12 @@ Si on se concentre maintenant sur le calcul de la fonction d'évaluation des hum
     <br>Fig2. - Formule utilisée pour évaluer les humains sur une carte.
   </p>
 </figure>
+
+Avec dans cette équation, `est_plus_proche`, définie par : 
+
+<figure>
+  <p align="center">
+    <img src="./report/is_nearest.png"/>
+    <br>Fig2. - Décomposition de la fonction `est_plus_proche`
+  </p>
+</figure>
