@@ -2,7 +2,7 @@
 
 <p align="justify">Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".</p>
 
-### Table of content: 
+### Table des matières: 
 + **[1. Prérequis](#prerequisites)**
 + **[2. La structure du code](#code_structure)**
 + **[3. Structure de l'IA](#ia_struct)**
@@ -52,6 +52,9 @@
 
 #### 4.3. Séparation et rassemblement <a name="split_merge"></a>
 
+Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés.
+
+
 #### 4.4. L'heuristique <a name="heuristic"></a>
 
 <p align="justify">Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:</p>
@@ -83,7 +86,7 @@ Avec dans cette équation, `est_plus_proche`, définie par :
   </p>
 </figure>
 
-Ainsi, en pratique, le raisonnement est le suivant: on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
+Ainsi, en pratique, le raisonnement est le suivant: pour chaque groupe d'humains, on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
 
 **Calcul de la fonction d'évaluation des opposants:**
 
@@ -108,3 +111,9 @@ Où la fonction `score` est déterminée de la manière suivante:
 Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(MinMax L. 117 - L. 141)**.
 
 ### 5. Idées d'amélioration <a name="next_steps"></a>
+
+Afin d'améliorer notre IA, nous aurions également pu: 
+- Elaguer notre algorithme MinMax, pour le transformer en algorithme Alpha Beta, ce qui économiserait du temps de calcul
+- Entrainer plusieurs algorithmes (AlphaBeta, SSS...) pour déterminer le plus efficace sur un nombre représentatif de parties
+- Mieux choisir les branches étudiées lors de l'execution de l'algorithme MinMax
+- Augmenter la profondeur de l'arbre pour évaluer plus de coups de l'adversaire et mieux comparer les différents scénarios possibles
