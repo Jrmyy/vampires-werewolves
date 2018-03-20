@@ -56,6 +56,7 @@ Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on
 <figure>
   <p align="center">
     <img src="./report/heuristic_full.png"/>
-    Fig1. - Formule utilisée pour évaluer une carte.
+    <br>Fig1. - Formule utilisée pour évaluer une carte.
   </p>
+    
 </figure>
