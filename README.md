@@ -58,5 +58,13 @@
     <img src="./report/heuristic_full.png"/>
     <br>Fig1. - Formule utilisée pour évaluer une carte.
   </p>
-    
+</figure>
+
+Si on se concentre maintenant sur le calcul de la fonction d'évaluation des humains, on la représente de la manière suivante:
+
+<figure>
+  <p align="center">
+    <img src="./report/heuristic_humans.png"/>
+    <br>Fig2. - Formule utilisée pour évaluer les humains sur une carte.
+  </p>
 </figure>
