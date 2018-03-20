@@ -103,23 +103,6 @@ public class TCPClient {
         return new byte[0];
     }
 
-    public byte[][] listenHUM() {
-        try {
-            byte[] nbHouses = new byte[1];
-            byte[] positionHouse = new byte[2];
-            this.in.read(nbHouses);
-            byte[][] allHouses = new byte[nbHouses[0]][2];
-            for(int i=0; i<nbHouses[0]; i++){
-                this.in.read(positionHouse);
-                allHouses[i] = positionHouse;
-            }
-            return allHouses;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new byte[0][0];
-    }
-
     public byte[][] listenMAP() {
         try {
             byte[] nbCells = new byte[1];
@@ -151,7 +134,7 @@ public class TCPClient {
         }
     }
 
-    public void sendMove(ArrayList<byte[]> moves) throws Exception {
+    public void sendMove(ArrayList<byte[]> moves) {
         // Send moves to the server
         try {
             byte nbMove = (byte) moves.size();

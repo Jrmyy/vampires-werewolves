@@ -2,7 +2,6 @@ package algorithm;
 
 import board.Board;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 abstract class Algorithm {
@@ -15,7 +14,7 @@ abstract class Algorithm {
      * Creates algorithm with root of a search tree
      * @param rootBoard Board at the beginning of the algorithm
      */
-    Algorithm(Board rootBoard) throws IOException {
+    Algorithm(Board rootBoard) {
         root = new Node(rootBoard);
     }
 

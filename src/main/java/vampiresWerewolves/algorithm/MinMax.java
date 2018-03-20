@@ -1,7 +1,6 @@
 package algorithm;
 
 import board.Board;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MinMax extends Algorithm{
@@ -11,7 +10,7 @@ public class MinMax extends Algorithm{
      *
      * @param rootBoard Board at the beginning of the algorithm
      */
-    public MinMax(Board rootBoard) throws IOException {
+    public MinMax(Board rootBoard) {
         super(rootBoard);
     }
 

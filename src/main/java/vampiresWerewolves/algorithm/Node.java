@@ -6,7 +6,6 @@ import board.Position;
 import utils.Utils;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -144,8 +143,10 @@ public class Node {
                         ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, ally);
                         ArrayList<Result> earlyMovesSplit = new ArrayList<>();
                         for (Result eMove: earlyMoves) {
-                            int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()].getPopulation();
-                            if (minPopToSplit > board.getMinHumanPop() && (allyPop - minPopToSplit) > board.getMinHumanPop()) {
+                            int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()]
+                                    .getPopulation();
+                            if (minPopToSplit > Math.min(board.getMinHumanPop(), board.getMinOppPop())
+                                    && (allyPop - minPopToSplit) > Math.min(board.getMinHumanPop(), board.getMinOppPop())) {
                                 earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                             }
                         }
@@ -167,15 +168,7 @@ public class Node {
             for (ArrayList<Result> resultedMoves: moves) {
                 ArrayList<Result> realMoves = new ArrayList<>();
                 int humansEaten = this.humansEaten;
-                for (Result res: resultedMoves) {
-                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
-                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
-                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
-                        humansEaten += nextMoveCell.getPopulation();
-                    }
-                    Result move = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
-                    realMoves.add(move);
-                }
+                humansEaten = computeRealMovesMade(resultedMoves, realMoves, humansEaten);
                 Board impliedBoard = board.simulateMoves(realMoves);
                 ArrayList<ArrayList<Result>> newAllyMoves = new ArrayList<>(this.allyMoves);
                 newAllyMoves.add(realMoves);
@@ -199,21 +192,26 @@ public class Node {
             for (ArrayList<Result> resultedMoves: moves) {
                 ArrayList<Result> realMoves = new ArrayList<>();
                 int humansEaten = this.humansEatenByOpponent;
-                for (Result res: resultedMoves) {
-                    Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
-                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
-                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
-                        humansEaten += nextMoveCell.getPopulation();
-                    }
-                    Result move = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
-                    realMoves.add(move);
-                }
+                humansEaten = computeRealMovesMade(resultedMoves, realMoves, humansEaten);
                 Board impliedBoard = board.simulateMoves(realMoves);
                 alternatives.add(new Node(impliedBoard, this.allyMoves, this.humansEatenByOpponent, humansEaten));
             }
         }
 
         return alternatives;
+    }
+
+    private int computeRealMovesMade(ArrayList<Result> resultedMoves, ArrayList<Result> realMoves, int humansEaten) {
+        for (Result res: resultedMoves) {
+            Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
+            Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
+            if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
+                humansEaten += nextMoveCell.getPopulation();
+            }
+            Result move = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
+            realMoves.add(move);
+        }
+        return humansEaten;
     }
 
     public Board getBoard() {
@@ -281,25 +279,7 @@ public class Node {
                     }
                     if (population > 1.5 * oppPop) {
                         double ratio = (double) oppPop / (double) Utils.minDistance(opp, position);
-                        if (keptPositions.size() < 3) {
-                            keptPositions.add(opp);
-                            minRatio = Math.min(minRatio, ratio);
-                        } else if (ratio > minRatio) {
-                            ArrayList<Position> removedPositions = new ArrayList<>();
-                            double newMinRatio = Double.POSITIVE_INFINITY;
-                            for (Position pos: keptPositions) {
-                                int posPop = board.getCells()[pos.getX()][pos.getY()].getPopulation();
-                                double posRatio = (double) posPop / (double) Utils.minDistance(pos, position);
-                                if (posRatio == minRatio) {
-                                    removedPositions.add(pos);
-                                } else {
-                                    newMinRatio = Math.min(newMinRatio, posRatio);
-                                }
-                            }
-                            keptPositions.removeAll(removedPositions);
-                            keptPositions.add(opp);
-                            minRatio = Math.min(newMinRatio, ratio);
-                        }
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, opp, ratio);
                     }
                 }
                 if (keptPositions.size() == 0 && minOpponentPop > population) {
@@ -314,25 +294,7 @@ public class Node {
                     int humanPop = board.getCells()[human.getX()][human.getY()].getPopulation();
                     if (population >= humanPop) {
                         double ratio = (double) humanPop / (double) Utils.minDistance(human, position);
-                        if (keptPositions.size() < 3) {
-                            keptPositions.add(human);
-                            minRatio = Math.min(minRatio, ratio);
-                        } else if (ratio > minRatio) {
-                            ArrayList<Position> removedPositions = new ArrayList<>();
-                            double newMinRatio = Double.POSITIVE_INFINITY;
-                            for (Position pos: keptPositions) {
-                                int posPop = board.getCells()[pos.getX()][pos.getY()].getPopulation();
-                                double posRatio = (double) posPop / (double) Utils.minDistance(pos, position);
-                                if (posRatio == minRatio) {
-                                    removedPositions.add(pos);
-                                } else {
-                                    newMinRatio = Math.min(newMinRatio, posRatio);
-                                }
-                            }
-                            keptPositions.removeAll(removedPositions);
-                            keptPositions.add(human);
-                            minRatio = Math.min(newMinRatio, ratio);
-                        }
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, human, ratio);
                     }
                 }
         }
@@ -342,6 +304,36 @@ public class Node {
             moves.add(new Result(position, population, kept));
         }
         return moves;
+    }
+
+    private double addOrNotToKeptPositions(Position position, ArrayList<Position> keptPositions, double minRatio,
+                                           Position other, double ratio) {
+
+        if (keptPositions.size() < 3) {
+
+            keptPositions.add(other);
+            minRatio = Math.min(minRatio, ratio);
+
+        } else if (ratio > minRatio) {
+
+            ArrayList<Position> removedPositions = new ArrayList<>();
+            double newMinRatio = Double.POSITIVE_INFINITY;
+            for (Position pos: keptPositions) {
+                int posPop = board.getCells()[pos.getX()][pos.getY()].getPopulation();
+                double posRatio = (double) posPop / (double) Utils.minDistance(pos, position);
+                if (posRatio == minRatio) {
+                    removedPositions.add(pos);
+                } else {
+                    newMinRatio = Math.min(newMinRatio, posRatio);
+                }
+            }
+            keptPositions.removeAll(removedPositions);
+            keptPositions.add(other);
+            minRatio = Math.min(newMinRatio, ratio);
+
+        }
+
+        return minRatio;
     }
 
     private int getHumansEaten() {

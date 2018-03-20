@@ -1,7 +1,6 @@
 package algorithm;
 
 import board.Board;
-import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -12,7 +11,7 @@ public class AlphaBeta extends Algorithm {
      *
      * @param rootBoard Board at the beginning of the algorithm
      */
-    public AlphaBeta(Board rootBoard) throws IOException {
+    public AlphaBeta(Board rootBoard) {
         super(rootBoard);
     }
 

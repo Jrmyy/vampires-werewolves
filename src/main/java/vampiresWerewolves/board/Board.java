@@ -1,14 +1,10 @@
 package board;
 
 import algorithm.AlphaBeta;
-import algorithm.MinMax;
-import algorithm.Node;
 import algorithm.Result;
-import utils.Utils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class Board implements Serializable {
 
@@ -83,7 +79,9 @@ public class Board implements Serializable {
                 if (this.getUs() == null) {
                     // Si la race est nulle (on est dans le premier remplissage) et que l'on a une créature sur la case
                     // On regarde si on a des vampires et que l'on est sur la positiononnée de départ
-                    if (vampires > 0 && this.getAllies().get(0).equals(position) || werewolves > 0 && !this.getAllies().get(0).equals(position)) {
+                    if ((vampires > 0 && this.getAllies().get(0).equals(position))
+                            || (werewolves > 0 && !this.getAllies().get(0).equals(position))
+                        ) {
                         // On assigne la race vampire
                         this.setUs(new Player("vampires"));
                         this.setOpponent(new Player("werewolves"));
@@ -155,17 +153,11 @@ public class Board implements Serializable {
             // Si la cellule d'origine nous appartient
             if (originCell.getKind().equals(this.getUs().getRace())) {
                 newAllies.add(to);
-
                 if (originCell.getPopulation() == move.getItemsMoved()) {
                     newAllies.remove(from);
                 }
-
                 newHumans.remove(to);
                 newOpponents.remove(to);
-
-                simulated.setHumans(newHumans);
-                simulated.setOpponents(newOpponents);
-                simulated.setAllies(newAllies);
 
                 // Sinon ça veut dire qu'elle appartient à l'adversaire
             } else {
@@ -173,24 +165,28 @@ public class Board implements Serializable {
                 if (originCell.getPopulation() == move.getItemsMoved()) {
                     newOpponents.remove(from);
                 }
-
                 newHumans.remove(to);
                 newAllies.remove(to);
-
-                simulated.setHumans(newHumans);
-                simulated.setOpponents(newOpponents);
-                simulated.setAllies(newAllies);
             }
+
+            simulated.setHumans(newHumans);
+            simulated.setOpponents(newOpponents);
+            simulated.setAllies(newAllies);
+
             // La next cellule devient remplie des valeurs de la quantité bougée (plus la population de la cellule sur laquelle on arrive)
             if (toCell.getKind().equals("humans") || toCell.getKind().equals("empty") || toCell.getKind().equals(originCell.getKind())) {
-                simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved() + toCell.getPopulation());
+                simulated.cells[to.getX()][to.getY()] = new Cell(
+                        originCell.getKind(), move.getItemsMoved() + toCell.getPopulation()
+                );
             } else {
                 simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved());
             }
 
             // Comme on bouge toutes les troupes, la cellule d'origine est vide
             if (originCell.getPopulation() > move.getItemsMoved()) {
-                simulated.cells[from.getX()][from.getY()] = new Cell(originCell.getKind(), originCell.getPopulation() - move.getItemsMoved());
+                simulated.cells[from.getX()][from.getY()] = new Cell(
+                        originCell.getKind(), originCell.getPopulation() - move.getItemsMoved()
+                );
             } else {
                 simulated.cells[from.getX()][from.getY()] = new Cell();
             }
@@ -274,10 +270,8 @@ public class Board implements Serializable {
         return pop;
     }
 
-    public ArrayList<byte[]> chooseMove() throws IOException {
+    public ArrayList<byte[]> chooseMove() {
         this.setCurrentPlayer(this.getUs());
-        //MinMax mm = new MinMax(this);
-        //ArrayList<Result> results = mm.algorithm(6);
         AlphaBeta ab = new AlphaBeta(this);
         ArrayList<Result> results = ab.algorithm(6);
         this.setCurrentPlayer(this.getOpponent());
