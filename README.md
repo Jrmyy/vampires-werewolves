@@ -1,16 +1,17 @@
-# Rapport projet d'intelligence artificielle 
+## Rapport projet d'intelligence artificielle 
 
 <p align="justify">Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".</p>
 
-### Table of content: 
+### Table des matières: 
 + **[1. Prérequis](#prerequisites)**
 + **[2. La structure du code](#code_structure)**
-+ **[3. L'implémentation de l'algorithme MinMax](#alg_implementation)**
-  + **[3.1. Le déroulé général](#general_behavior)**
-  + **[3.2. La création des alternatives/branches](#branches)**
-  + **[3.3. Séparation et rassemblement](#split_merge)**
-  + **[3.4. L'heuristique](#heuristic)**
-+ **[4. Idées d'amélioration](#next_steps)**
++ **[3. Structure de l'IA](#ia_struct)**
++ **[4. L'implémentation de l'algorithme MinMax](#alg_implementation)**
+  + **[4.1. Le déroulé général](#general_behavior)**
+  + **[4.2. La création des alternatives/branches](#branches)**
+  + **[4.3. Séparation et rassemblement](#split_merge)**
+  + **[4.4. L'heuristique](#heuristic)**
++ **[5. Idées d'amélioration](#next_steps)**
 
 ### 1. Prérequis  <a name="prerequisites"></a>
 
@@ -33,9 +34,11 @@
   - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme MinMax et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
   - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. </p>
   
-### 3. L'implémentation de l'algorithme MinMax <a name="alg_implementation"></a>
+### 3. Architecture de l'IA et Représentation de l'environnement <a name="ia_struct"></a>
+  
+### 4. L'implémentation de l'algorithme MinMax <a name="alg_implementation"></a>
 
-#### 3.1. Le déroulé général <a name="general_behavior"></a>
+#### 4.1. Le déroulé général <a name="general_behavior"></a>
 
 <p align="justify">A chacun de notre tour, le programme réagit de la manière suivante:
 
@@ -45,14 +48,14 @@
 4. Cette fonction va simplement appeler `minMax` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(MinMax L. 31)**
 </p>
 
-#### 3.2. La création des alternatives/branches <a name="branches"></a>
+#### 4.2. La création des alternatives/branches <a name="branches"></a>
 
-#### 3.3. Séparation et rassemblement <a name="split_merge"></a>
+#### 4.3. Séparation et rassemblement <a name="split_merge"></a>
 
 Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés.
 
 
-#### 3.4. L'heuristique <a name="heuristic"></a>
+#### 4.4. L'heuristique <a name="heuristic"></a>
 
 <p align="justify">Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:</p>
 
@@ -106,3 +109,5 @@ Où la fonction `score` est déterminée de la manière suivante:
 </figure>
 
 Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(MinMax L. 117 - L. 141)**.
+
+### 5. Idées d'amélioration <a name="next_steps"></a>

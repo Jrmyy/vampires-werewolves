@@ -22,37 +22,6 @@ public class Board implements Serializable {
     private ArrayList<Position> humans = new ArrayList<>();
     private Cell[][] cells;
 
-    @Override
-    public int hashCode() {
-        int allyHash = 0;
-        for (Position ally: allies) {
-            allyHash += ally.hashCode();
-        }
-
-        int oppHash = 0;
-        for (Position opp: opponents) {
-            oppHash += opp.hashCode();
-        }
-
-        int humanHash = 0;
-        for (Position human: humans) {
-            humanHash += human.hashCode();
-        }
-
-        int cellsHash = 0;
-        for(int i = 0; i < cols; i++){
-            for(int j = 0; j < rows; j++){
-                cellsHash += cells[i][j].hashCode();
-            }
-        }
-        return 31 * allyHash + 29 * oppHash + 27 * humanHash + 24 * currentPlayer.hashCode() + 21 * cellsHash;
-    }
-
-    @Override
-    public String toString() {
-        return "Current player is " + this.getCurrentPlayer() + "\n" + "We have allies at : " + this.allies + "\n" + "We have opponents at : " + this.opponents + "\n" + "We have humans at : " + this.humans + "\n" + "Board is : " + Arrays.deepToString(this.cells);
-    }
-
     /**
      * On initialise les dimensions de la carte, sans remplir avec les données
      * @param dimensions
@@ -162,22 +131,6 @@ public class Board implements Serializable {
     }
 
     /**
-     * On crée une nouvelle carte en inversant les races. Nos positions deviennent celles de l'adversaire et les
-     * positions de l'adversaire deviennent les notres. Utilisée pour la partie min du MinMax
-     * @return
-     */
-    public Board flip() {
-        Board flipped = Board.copy(this);
-        flipped.us = this.opponent;
-        flipped.opponent = this.us;
-        flipped.allies = this.opponents;
-        flipped.opponents = this.allies;
-        flipped.setUs(this.getOpponent());
-        flipped.setOpponent(this.getUs());
-        return flipped;
-    }
-
-    /**
      * Crée une copie de la carte, avant la simulation de plusieurs mouvements
      * @param moves
      * @return
@@ -244,7 +197,6 @@ public class Board implements Serializable {
         }
 
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
-        Node.logger.info("Current player after simulation is " + simulated.getCurrentPlayer() + " while before simulation " + this.getCurrentPlayer());
         return simulated;
     }
 
@@ -327,7 +279,7 @@ public class Board implements Serializable {
         //MinMax mm = new MinMax(this);
         //ArrayList<Result> results = mm.algorithm(6);
         AlphaBeta ab = new AlphaBeta(this);
-        ArrayList<Result> results = ab.algorithm(6);
+        ArrayList<Result> results = ab.algorithm(5);
         this.setCurrentPlayer(this.getOpponent());
         ArrayList<byte[]> parsedResults = new ArrayList<>();
         results.forEach(move -> parsedResults.add(move.parse()));
@@ -420,5 +372,10 @@ public class Board implements Serializable {
 
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
+    }
+
+    @Override
+    public int hashCode() {
+        return 24 * currentPlayer.hashCode() + 21 * Arrays.deepHashCode(cells);
     }
 }
