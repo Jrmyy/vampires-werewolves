@@ -43,6 +43,13 @@ public class Utils {
         ArrayList<Position> adjacentCells = findAdjacentCells(map.getCols(), map.getRows(), start);
         int minDistance = Integer.MAX_VALUE;
         Position bestMove = null;
+        HashMap<String, Double> bestMoveKindScore = new HashMap<String, Double>() {{
+            put("empty", 0.0);
+            put(map.getUs().getRace(), 0.5);
+            put(map.getOpponent().getRace(), 1.0);
+            put("humans", 1.5);
+        }};
+        String bestMoveKind = "empty";
 
         if (adjacentCells.contains(goal)) {
             return goal;
@@ -51,23 +58,40 @@ public class Utils {
         for (Position adj: adjacentCells) {
             Cell adjCell = map.getCells()[adj.getX()][adj.getY()];
             if (adjCell.getKind().equals("empty")) {
-                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
+                if (
+                        Utils.minDistance(adj, goal) + 1 < minDistance
+                    || (Utils.minDistance(adj, goal) + 1 == minDistance
+                                && bestMoveKindScore.get(bestMoveKind) < bestMoveKindScore.get(adjCell.getKind()))
+                    ) {
                     bestMove = adj;
+                    bestMoveKind = adjCell.getKind();
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             }
             if (adjCell.getKind().equals(map.getUs().getRace())) {
-                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
+                if (
+                        Utils.minDistance(adj, goal) + 1 < minDistance
+                    || (Utils.minDistance(adj, goal) + 1 == minDistance
+                                && bestMoveKindScore.get(bestMoveKind) < bestMoveKindScore.get(adjCell.getKind()))
+                    ) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() <= itemsMoved) {
-                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
+                if (
+                        Utils.minDistance(adj, goal) + 1 < minDistance
+                    || (Utils.minDistance(adj, goal) + 1 == minDistance
+                                && bestMoveKindScore.get(bestMoveKind) < bestMoveKindScore.get(adjCell.getKind()))
+                    ) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             } else if (adjCell.getKind().equals(map.getOpponent().getRace()) && 1.5 * adjCell.getPopulation() < itemsMoved) {
-                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
+                if (
+                        Utils.minDistance(adj, goal) + 1 < minDistance
+                        || (Utils.minDistance(adj, goal) + 1 == minDistance
+                                && bestMoveKindScore.get(bestMoveKind) < bestMoveKindScore.get(adjCell.getKind()))
+                    ) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }

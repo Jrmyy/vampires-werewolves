@@ -49,8 +49,9 @@ public class Node {
         Board map = this.getBoard();
 
         if (heuristicCache.keySet().contains(map.hashCode())) {
-            logger.info("Already in cache, returning result");
-            return heuristicCache.get(map.hashCode());
+            double score = heuristicCache.get(map.hashCode());
+            logger.info("Already in cache, returning result : " + score + " for move " + this.allyMoves.get(0));
+            return score;
         }
 
         if (map.getAllies().size() == 0) {

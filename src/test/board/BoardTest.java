@@ -22,9 +22,17 @@ public class BoardTest {
     public void hashCodeTest() {
         this.setFakeMap();
         assertEquals(board.hashCode(), board.hashCode());
-        Board newBord = Board.copy(board);
-        newBord.setCurrentPlayer(board.getOpponent());
-        assertNotEquals(newBord.hashCode(), board.hashCode());
+        Board newBoard = Board.copy(board);
+        newBoard.setCurrentPlayer(board.getOpponent());
+        assertNotEquals(newBoard.hashCode(), board.hashCode());
+        newBoard = Board.copy(board);
+        newBoard.getCells()[0][0].fill("empty", 0);
+        newBoard.getCells()[1][1].fill("werewolves", 3);
+        assertNotEquals(newBoard.hashCode(), board.hashCode());
+        newBoard = Board.copy(board);
+        newBoard.setCurrentPlayer(board.getOpponent());
+        newBoard.setCurrentPlayer(board.getUs());
+        assertEquals(board.hashCode(), newBoard.hashCode());
     }
 
     private Cell[][] generateFakeMap(int cols, int rows) {
