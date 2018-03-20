@@ -2,7 +2,7 @@
 
 <p align="justify">Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".</p>
 
-### Table of content: 
+### Table des matières: 
 + **[1. Prérequis](#prerequisites)**
 + **[2. La structure du code](#code_structure)**
 + **[3. Structure de l'IA](#ia_struct)**
