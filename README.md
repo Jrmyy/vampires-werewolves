@@ -60,6 +60,8 @@
   </p>
 </figure>
 
+**Calcul de la fonction d'évaluation des humains:**
+
 Si on se concentre maintenant sur le calcul de la fonction d'évaluation des humains, on la représente de la manière suivante:
 
 <figure>
@@ -77,3 +79,27 @@ Avec dans cette équation, `est_plus_proche`, définie par :
     <br>Fig3. - Décomposition de la fonction est_plus_proche
   </p>
 </figure>
+
+Ainsi, en pratique, le raisonnement est le suivant: on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
+
+**Calcul de la fonction d'évaluation des opposants:**
+
+Intéressons nous désormais à la fonction d'évaluation des opposants sur la carte. Elle se décompose sous la forme suivante
+
+<figure>
+  <p align="center">
+    <img src="./report/heuristic_humans.png"/>
+    <br>Fig4. - Formule utilisée pour évaluer les ennemis sur une carte.
+  </p>
+</figure>
+
+Où la fonction `score` est déterminée de la manière suivante:
+
+<figure>
+  <p align="center">
+    <img src="./report/score_ennemi_allie.png"/>
+    <br>Fig5. - Score entre un allié et son plus proche opposant
+  </p>
+</figure>
+
+Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(MinMax L. 117 - L. 141)**.
