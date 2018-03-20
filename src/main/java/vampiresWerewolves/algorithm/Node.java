@@ -6,6 +6,7 @@ import board.Position;
 import utils.Utils;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -136,16 +137,26 @@ public class Node {
 
         if (board.getCurrentPlayer().equals(board.getUs())) {
             for (Position ally: board.getAllies()) {
+                int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                 ArrayList<Result> allMoves = new ArrayList<>();
                 for (String strategy: MOVEMENT_TYPES) {
                     if (strategy.equals("transform")) {
                         ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, ally);
+                        ArrayList<Result> earlyMovesSplit = new ArrayList<>();
+                        for (Result eMove: earlyMoves) {
+                            int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()].getPopulation();
+                            if (minPopToSplit > board.getMinHumanPop() && (allyPop - minPopToSplit) > board.getMinHumanPop()) {
+                                earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
+                            }
+                        }
+                        allMoves.addAll(earlyMovesSplit);
                         allMoves.addAll(earlyMoves);
+
                     } else {
                         allMoves.addAll(this.findBestMoveForStrategy(strategy, ally));
                     }
                 }
-                goalMoves.put(ally, Utils.dropDuplicates(allMoves));
+                goalMoves.put(ally, Result.dropDuplicates(allMoves));
                 logger.info("We want to reach : " + goalMoves.get(ally) + " from " + ally);
             }
 
@@ -177,7 +188,7 @@ public class Node {
                 for (String strategy: MOVEMENT_TYPES) {
                     allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
                 }
-                goalMoves.put(opp, Utils.dropDuplicates(allMoves));
+                goalMoves.put(opp, Result.dropDuplicates(allMoves));
                 logger.info("Enemy wants to reach : " + goalMoves.get(opp) + " from " + opp);
             }
 
@@ -217,6 +228,19 @@ public class Node {
         return allyMoves;
     }
 
+    private static boolean isValidCombination(ArrayList<Result> combination) {
+        // On supprime les combinaisons d'éléments qui vont au même endroit
+        ArrayList<Position> goals = new ArrayList<>();
+        for (Result move: combination) {
+            if (!goals.contains(move.getDestination())) {
+                goals.add(move.getDestination());
+            } else {
+                return false;
+            }
+        }
+        return !Result.isCircular(combination);
+    }
+
     private List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
         List<ArrayList<Result>> allMoves = new ArrayList<>();
         int solutions = 1;
@@ -232,7 +256,9 @@ public class Node {
                 combination.add(res.get((i/j)%res.size()));
                 j *= res.size();
             }
-            allMoves.add(combination);
+            if (Node.isValidCombination(combination)) {
+                allMoves.add(combination);
+            }
         }
 
         return allMoves;
@@ -328,7 +354,7 @@ public class Node {
 
     private static Logger createLogger() {
         Logger log = Logger.getLogger("my logger");
-        Handler fh = null;
+        Handler fh;
         try {
             fh = new FileHandler("logs/myLog.log");
             fh.setFormatter(new SimpleFormatter());

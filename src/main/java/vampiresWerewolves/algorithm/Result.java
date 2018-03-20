@@ -2,6 +2,11 @@ package algorithm;
 
 import board.Position;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * Classe qui représente un résultat de mouvement, que l'on peut ensuite parser pour l'envoyer au serveur
  */
@@ -15,12 +20,6 @@ public class Result {
         this.source = source;
         this.itemsMoved = itemsMoved;
         this.destination = destination;
-    }
-
-    Result() {
-        this.source = null;
-        this.itemsMoved = -1;
-        this.destination = null;
     }
 
     public byte[] parse() {
@@ -37,24 +36,36 @@ public class Result {
         return source;
     }
 
-    public void setSource(Position source) {
-        this.source = source;
-    }
-
     public int getItemsMoved() {
         return itemsMoved;
-    }
-
-    public void setItemsMoved(int itemsMoved) {
-        this.itemsMoved = itemsMoved;
     }
 
     public Position getDestination() {
         return destination;
     }
 
-    public void setDestination(Position destination) {
-        this.destination = destination;
+    /**
+     * Supprime les duplicats d'une liste de résultats
+     * @param undeduped
+     * @return
+     */
+    public static ArrayList<Result> dropDuplicates(ArrayList<Result> undeduped) {
+        Set<Result> listWithoutDuplicates = new LinkedHashSet<>(undeduped);
+        undeduped.clear();
+        undeduped.addAll(listWithoutDuplicates);
+        return undeduped;
+    }
+
+    public static boolean isCircular(ArrayList<Result> results) {
+        ArrayList<Position> sources = new ArrayList<>();
+        ArrayList<Position> destinations = new ArrayList<>();
+        results.forEach(res -> {
+            sources.add(res.getSource());
+            destinations.add(res.getDestination());
+        });
+        Collections.sort(sources);
+        Collections.sort(destinations);
+        return sources.equals(destinations);
     }
 
     @Override

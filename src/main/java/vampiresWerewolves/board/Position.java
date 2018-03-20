@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Petite classe pour simplement éviter de se balader avec des tableaux alors que l'on peut avoir un objet plus simple
  * à manipuler
  */
-public class Position implements Serializable {
+public class Position implements Serializable, Comparable<Position> {
 
     private int x;
     private int y;
@@ -40,6 +40,25 @@ public class Position implements Serializable {
         temp = Double.doubleToLongBits(y);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
+    }
+
+    @Override
+    public int compareTo(Position other) {
+        if (this.equals(other)) {
+            return 0;
+        }
+
+        if (other.getX() > this.getX()) {
+            return -1;
+        } else if (other.getX() < this.getX()) {
+            return 1;
+        } else {
+            if (other.getY() > this.getY()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
     }
 
     public int getX() {

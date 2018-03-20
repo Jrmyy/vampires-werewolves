@@ -279,7 +279,7 @@ public class Board implements Serializable {
         //MinMax mm = new MinMax(this);
         //ArrayList<Result> results = mm.algorithm(6);
         AlphaBeta ab = new AlphaBeta(this);
-        ArrayList<Result> results = ab.algorithm(5);
+        ArrayList<Result> results = ab.algorithm(6);
         this.setCurrentPlayer(this.getOpponent());
         ArrayList<byte[]> parsedResults = new ArrayList<>();
         results.forEach(move -> parsedResults.add(move.parse()));

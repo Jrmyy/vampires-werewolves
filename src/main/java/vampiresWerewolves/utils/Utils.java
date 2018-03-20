@@ -21,13 +21,6 @@ public class Utils {
         return Math.max(Math.abs(b.getX() - a.getX()), Math.abs(b.getY() - a.getY()));
     }
 
-    public static ArrayList<Result> dropDuplicates(ArrayList<Result> undeduped) {
-        Set<Result> listWithoutDuplicates = new LinkedHashSet<>(undeduped);
-        undeduped.clear();
-        undeduped.addAll(listWithoutDuplicates);
-        return undeduped;
-    }
-
     /**
      * Avec une position de départ et une position d'arrivée, calcule sur quelle case aller au prochain mouvement
      * @param start
