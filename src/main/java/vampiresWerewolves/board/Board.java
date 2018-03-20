@@ -1,6 +1,8 @@
 package board;
 
+import algorithm.AlphaBeta;
 import algorithm.MinMax;
+import algorithm.Node;
 import algorithm.Result;
 import utils.Utils;
 import java.io.*;
@@ -19,6 +21,32 @@ public class Board implements Serializable {
     private ArrayList<Position> opponents = new ArrayList<>();
     private ArrayList<Position> humans = new ArrayList<>();
     private Cell[][] cells;
+
+    @Override
+    public int hashCode() {
+        int allyHash = 0;
+        for (Position ally: allies) {
+            allyHash += ally.hashCode();
+        }
+
+        int oppHash = 0;
+        for (Position opp: opponents) {
+            oppHash += opp.hashCode();
+        }
+
+        int humanHash = 0;
+        for (Position human: humans) {
+            humanHash += human.hashCode();
+        }
+
+        int cellsHash = 0;
+        for(int i = 0; i < cols; i++){
+            for(int j = 0; j < rows; j++){
+                cellsHash += cells[i][j].hashCode();
+            }
+        }
+        return 31 * allyHash + 29 * oppHash + 27 * humanHash + 24 * currentPlayer.hashCode() + 21 * cellsHash;
+    }
 
     @Override
     public String toString() {
@@ -216,7 +244,7 @@ public class Board implements Serializable {
         }
 
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
-        System.out.println("Current player after simulation is " + simulated.getCurrentPlayer() + " while before simulation " + this.getCurrentPlayer());
+        Node.logger.info("Current player after simulation is " + simulated.getCurrentPlayer() + " while before simulation " + this.getCurrentPlayer());
         return simulated;
     }
 
@@ -225,7 +253,7 @@ public class Board implements Serializable {
      * @param orig
      * @return
      */
-    private static Board copy(Board orig) {
+    public static Board copy(Board orig) {
         Object obj = null;
         try {
             // On écrit l'objet dans un Byte Array
@@ -296,8 +324,10 @@ public class Board implements Serializable {
 
     public ArrayList<byte[]> chooseMove() throws IOException {
         this.setCurrentPlayer(this.getUs());
-        MinMax ab = new MinMax(this);
-        ArrayList<Result> results = ab.algorithm(3);
+        //MinMax mm = new MinMax(this);
+        //ArrayList<Result> results = mm.algorithm(6);
+        AlphaBeta ab = new AlphaBeta(this);
+        ArrayList<Result> results = ab.algorithm(6);
         this.setCurrentPlayer(this.getOpponent());
         ArrayList<byte[]> parsedResults = new ArrayList<>();
         results.forEach(move -> parsedResults.add(move.parse()));

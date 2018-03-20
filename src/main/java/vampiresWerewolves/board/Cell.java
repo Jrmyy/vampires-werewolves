@@ -41,6 +41,16 @@ public class Cell implements Serializable {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(population);
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + kind.hashCode();
+        return result;
+    }
+
     public String getKind() {
         return kind;
     }

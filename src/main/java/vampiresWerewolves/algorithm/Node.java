@@ -14,7 +14,7 @@ import java.util.logging.SimpleFormatter;
 
 public class Node {
 
-    public static Logger logger = Logger.getLogger("my logger");
+    public static Logger logger = Node.createLogger();
 
     private Board board;
 
@@ -26,11 +26,9 @@ public class Node {
 
     private static final String[] MOVEMENT_TYPES = {"transform"};
 
-    Node(Board board) throws IOException {
-        Handler fh = new FileHandler("logs/myLog_" + board.getCurrentPlayer().getRace() +".log");
-        fh.setFormatter(new SimpleFormatter());
-        logger.addHandler(fh);
-        logger.setUseParentHandlers(false);
+    private static HashMap<Integer, Double> heuristicCache = new HashMap<>();
+
+    Node(Board board) {
         this.board = board;
         this.allyMoves = new ArrayList<>();
     }
@@ -42,25 +40,93 @@ public class Node {
         this.humansEatenByOpponent = humansEatenByOpponent;
     }
 
-    public List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
-        List<ArrayList<Result>> allMoves = new ArrayList<>();
-        int solutions = 1;
+    /**
+     * Fonction heuristique pour évaluer une situation donnée d'un noeud
+     * @return
+     */
+    public double heuristic() {
 
-        for(ArrayList<Result> results: goalMoves.values()) {
-            solutions *= results.size();
+        Board map = this.getBoard();
+
+        if (heuristicCache.keySet().contains(map.hashCode())) {
+            logger.info("Already in cache, returning result");
+            return heuristicCache.get(map.hashCode());
         }
 
-        for(int i = 0; i < solutions; i++) {
-            ArrayList<Result> combination = new ArrayList<>();
-            int j = 1;
-            for(ArrayList<Result> res : goalMoves.values()) {
-                combination.add(res.get((i/j)%res.size()));
-                j *= res.size();
+        if (map.getAllies().size() == 0) {
+            return -2 * map.opponentsPopulation() - map.humansPopulation();
+        }
+
+        if (map.getOpponents().size() == 0) {
+            return 2 * map.alliesPopulation() + map.humansPopulation();
+        }
+
+        double score = 2 * map.alliesPopulation() - map.opponentsPopulation();
+
+        for (Position human : map.getHumans()) {
+            int humanPop = map.getCells()[human.getX()][human.getY()].getPopulation();
+
+            double minDistAlly = Double.POSITIVE_INFINITY;
+            for (Position ally: map.getAllies()) {
+                int allyPop = map.getCells()[ally.getX()][ally.getY()].getPopulation();
+                double temp = Utils.minDistance(ally, human);
+                if (temp < minDistAlly && allyPop >= humanPop) {
+                    minDistAlly = temp;
+                }
             }
-            allMoves.add(combination);
+
+            double minDistOpponent = Double.POSITIVE_INFINITY;
+            for (Position opp: map.getOpponents()) {
+                int OpponentPop = map.getCells()[opp.getX()][opp.getY()].getPopulation();
+                double temp = Utils.minDistance(opp, human);
+                if (temp < minDistAlly && OpponentPop >= humanPop) {
+                    minDistOpponent = temp;
+                }
+            }
+
+            if ((minDistAlly < minDistOpponent) || (minDistAlly == minDistOpponent && map.getCurrentPlayer().equals(map.getUs()))) {
+                score += (double) humanPop / Math.max(1, minDistAlly);
+            } else {
+                score -= (double) humanPop / Math.max(1, minDistOpponent);
+            }
+
         }
 
-        return allMoves;
+        for (Position ally: map.getAllies()) {
+            double minDistance = Double.POSITIVE_INFINITY;
+            Position opponent = null;
+            for (Position opp: map.getOpponents()) {
+                double temp = Utils.minDistance(ally, opp);
+                if (temp < minDistance) {
+                    minDistance = temp;
+                    opponent = opp;
+                }
+            }
+
+            if (minDistance <= 2 || (minDistance == 1 && map.getCurrentPlayer().equals(map.getUs()))) {
+                int allyPop = map.getCells()[ally.getX()][ally.getY()].getPopulation();
+                int opponentPop = map.getCells()[opponent.getX()][opponent.getY()].getPopulation();
+                if (allyPop > 1.5 * opponentPop) {
+                    score += opponentPop / Math.max(1, minDistance);
+                } else if (1.5 * allyPop < opponentPop) {
+                    score -= allyPop / Math.max(1, minDistance);
+                } else {
+                    double p = allyPop / (2 * opponentPop);
+                    score += Math.pow(p, 2) * allyPop / Math.max(1, minDistance)
+                            - Math.pow(1 - p, 2) * opponentPop / Math.max(1, minDistance);
+                }
+            }
+        }
+
+        score += 2 * this.getHumansEaten();
+        score -= 2 * this.getHumansEatenByOpponent();
+
+        logger.info("Heuristic for move " + this.getAllyMoves().get(0) + " is " + score);
+
+        heuristicCache.put(map.hashCode(), score);
+
+        return score;
+
     }
 
     public ArrayList<Node> createAlternatives() {
@@ -68,21 +134,11 @@ public class Node {
         HashMap<Position, ArrayList<Result>> goalMoves = new HashMap<>();
 
         if (board.getCurrentPlayer().equals(board.getUs())) {
-            int minHumanPop = board.getMinHumanPop();
-            int minOppPop = board.getMinOppPop();
             for (Position ally: board.getAllies()) {
-                int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                 ArrayList<Result> allMoves = new ArrayList<>();
                 for (String strategy: MOVEMENT_TYPES) {
                     if (strategy.equals("transform")) {
                         ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, ally);
-                        ArrayList<Result> earlyMovesSplit = new ArrayList<>();
-                        for (Result eMove: earlyMoves) {
-                            int minPopToSplit = board.getCells()[eMove.getDestination().getX()][eMove.getDestination().getY()]
-                                    .getPopulation();
-                            earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
-                        }
-                        allMoves.addAll(earlyMovesSplit);
                         allMoves.addAll(earlyMoves);
                     } else {
                         allMoves.addAll(this.findBestMoveForStrategy(strategy, ally));
@@ -154,6 +210,31 @@ public class Node {
 
     public void setBoard(Board board) {
         this.board = board;
+    }
+
+    public ArrayList<ArrayList<Result>> getAllyMoves() {
+        return allyMoves;
+    }
+
+    private List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
+        List<ArrayList<Result>> allMoves = new ArrayList<>();
+        int solutions = 1;
+
+        for(ArrayList<Result> results: goalMoves.values()) {
+            solutions *= results.size();
+        }
+
+        for(int i = 0; i < solutions; i++) {
+            ArrayList<Result> combination = new ArrayList<>();
+            int j = 1;
+            for(ArrayList<Result> res : goalMoves.values()) {
+                combination.add(res.get((i/j)%res.size()));
+                j *= res.size();
+            }
+            allMoves.add(combination);
+        }
+
+        return allMoves;
     }
 
     private ArrayList<Result> findBestMoveForStrategy(String movement, Position position) {
@@ -236,15 +317,25 @@ public class Node {
         return moves;
     }
 
-    public ArrayList<ArrayList<Result>> getAllyMoves() {
-        return allyMoves;
-    }
-
-    public int getHumansEaten() {
+    private int getHumansEaten() {
         return humansEaten;
     }
 
-    public int getHumansEatenByOpponent() {
+    private int getHumansEatenByOpponent() {
         return humansEatenByOpponent;
+    }
+
+    private static Logger createLogger() {
+        Logger log = Logger.getLogger("my logger");
+        Handler fh = null;
+        try {
+            fh = new FileHandler("logs/myLog.log");
+            fh.setFormatter(new SimpleFormatter());
+            log.addHandler(fh);
+            log.setUseParentHandlers(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return log;
     }
 }

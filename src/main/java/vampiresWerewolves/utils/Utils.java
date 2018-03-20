@@ -50,18 +50,24 @@ public class Utils {
 
         for (Position adj: adjacentCells) {
             Cell adjCell = map.getCells()[adj.getX()][adj.getY()];
+            if (adjCell.getKind().equals("empty")) {
+                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
+                    bestMove = adj;
+                    minDistance = Utils.minDistance(adj, goal) + 1;
+                }
+            }
             if (adjCell.getKind().equals(map.getUs().getRace())) {
-                if (Utils.minDistance(adj, goal) < minDistance) {
+                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             } else if (adjCell.getKind().equals("humans") && adjCell.getPopulation() <= itemsMoved) {
-                if (Utils.minDistance(adj, goal) < minDistance) {
+                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }
             } else if (adjCell.getKind().equals(map.getOpponent().getRace()) && 1.5 * adjCell.getPopulation() < itemsMoved) {
-                if (Utils.minDistance(adj, goal) < minDistance) {
+                if (Utils.minDistance(adj, goal) + 1 < minDistance) {
                     bestMove = adj;
                     minDistance = Utils.minDistance(adj, goal) + 1;
                 }

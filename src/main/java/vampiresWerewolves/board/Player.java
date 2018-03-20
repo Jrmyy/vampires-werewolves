@@ -23,4 +23,10 @@ public class Player implements Serializable {
     public String toString() {
         return this.race;
     }
+
+    @Override
+    public int hashCode() {
+        return race.hashCode();
+    }
 }
+
