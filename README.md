@@ -49,6 +49,9 @@
 
 #### 3.3. Séparation et rassemblement <a name="split_merge"></a>
 
+Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés.
+
+
 #### 3.4. L'heuristique <a name="heuristic"></a>
 
 <p align="justify">Le calcul de l'heuristique est fait de manière globale: cela veut dire que l'on va évaluer l'état d'une carte, avec nos positions, celles de l'ennemis ainsi que les humains. L'idée ici n'est pas de calculer un score pour chaque déplacement et de sommer le tout. Ici, le but est de prendre en compte les positions des alliés entre eux, avec tous les mouvements possibles, afin d'être le plus fidèle possible à ce qui pourrait se passer. Le calcul de l'heuristique repose sur la formule suivante:</p>
@@ -80,7 +83,7 @@ Avec dans cette équation, `est_plus_proche`, définie par :
   </p>
 </figure>
 
-Ainsi, en pratique, le raisonnement est le suivant: on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
+Ainsi, en pratique, le raisonnement est le suivant: pour chaque groupe d'humains, on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
 
 **Calcul de la fonction d'évaluation des opposants:**
 
