@@ -50,21 +50,32 @@ public class Result {
      * @return
      */
     public static ArrayList<Result> dropDuplicates(ArrayList<Result> undeduped) {
+        // Le set va supprimer les duplicats du tableau
         Set<Result> listWithoutDuplicates = new LinkedHashSet<>(undeduped);
+        // On vide le tableau initial
         undeduped.clear();
+        // On le re remplit avec les valeurs restantes
         undeduped.addAll(listWithoutDuplicates);
         return undeduped;
     }
 
+    /**
+     * Retourne si oui ou non le mouvement est circulaire (par circulaire on entend que les sources et les destinations sont différentes)
+     * @param results
+     * @return
+     */
     public static boolean isCircular(ArrayList<Result> results) {
         ArrayList<Position> sources = new ArrayList<>();
         ArrayList<Position> destinations = new ArrayList<>();
+        // On récupère toutes les sources et les destinations
         results.forEach(res -> {
             sources.add(res.getSource());
             destinations.add(res.getDestination());
         });
+        // On trie les listes (on trie par X puis par Y)
         Collections.sort(sources);
         Collections.sort(destinations);
+        // On regarde si les listes sont égales
         return sources.equals(destinations);
     }
 
@@ -83,13 +94,16 @@ public class Result {
         return false;
     }
 
+    /**
+     * Utilisé pour identifier de manière unique une position
+     */
     @Override
     public int hashCode() {
         int result;
         long temp;
         temp = Double.doubleToLongBits(this.itemsMoved);
         result = (int) (temp ^ (temp >>> 32));
-        result = 31 * result + this.getSource().hashCode() + this.getDestination().hashCode() + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + this.getSource().hashCode() + 29 * this.getDestination().hashCode() + (int) (temp ^ (temp >>> 32));
         return result;
     }
 }

@@ -19,7 +19,8 @@ public class Board implements Serializable {
     private Cell[][] cells;
 
     /**
-     * On initialise les dimensions de la carte, sans remplir avec les données
+     * On initialise les dimensions de la carte, sans remplir avec les données (après reception de la commande SET par
+     * le serveur).
      * @param dimensions
      */
     public void setMapDimensions(byte[] dimensions) {
@@ -41,7 +42,19 @@ public class Board implements Serializable {
     }
 
     /**
-     * On va remplir la map avec les différentes espèces aux différentes cases (ou updater le carte)
+     * Récupère la position de départ de notre joueur (après réception de la commande HME)
+     * @param home
+     */
+    public void setHome(byte[] home) {
+        // On récupère les coordonnées et on ajoute cette position à la liste des positions alliées connues
+        int x = (int) home[0];
+        int y = (int) home[1];
+        allies.add(new Position(x, y));
+    }
+
+    /**
+     * On va remplir la map avec les différentes espèces aux différentes cases (ou updater le carte) (après reception
+     * des commandes MAP ou UPD par le serveur).
      * @param content
      */
     public void fillOrUpdateMap(byte[][] content) {
@@ -51,7 +64,7 @@ public class Board implements Serializable {
         int vampires;
         int werewolves;
 
-        // Pour chaque case
+        // Pour chaque case reçue par le serveur...
         for (byte[] aContent : content) {
 
             // On récupère la positiononnée (x,y), le nombre d'espèces, et on le met dans notre matrice de Cell
@@ -61,9 +74,10 @@ public class Board implements Serializable {
             vampires = (int) aContent[3];
             werewolves = (int) aContent[4];
             Position position = new Position(x, y);
+
+            // On définit l'espèce sous forme d'une string et la quantité de population.
             String kind = "empty";
             int population = Math.max(humans, Math.max(vampires, werewolves));
-
             if (humans > 0) {
                 kind = "humans";
             } else if (vampires > 0) {
@@ -72,28 +86,34 @@ public class Board implements Serializable {
                 kind = "werewolves";
             }
 
-            // S'il y a des humains et que la positiononnée n'est pas dans la liste des humains, on remplit
             if (kind.equals("humans") && !this.getHumans().contains(position)) {
+                /* S'il y a des humains et que la position donnée n'est pas dans la liste des humains, on ajoute cette case
+                 à la liste des cases humaines connues. */
                 this.getHumans().add(position);
             } else if (kind.equals("vampires") || kind.equals("werewolves")) {
+
+                /* Si on ne connait pas encore la race que l'on joue, mais que la case actuelle contient un vampire
+                 ou un loup-garou, on détermine laquelle des deux races on joue en comparant cette case avec notre
+                 case de départ (déjà inscrite dans la liste des positions alliées). */
                 if (this.getUs() == null) {
-                    // Si la race est nulle (on est dans le premier remplissage) et que l'on a une créature sur la case
-                    // On regarde si on a des vampires et que l'on est sur la positiononnée de départ
                     if ((vampires > 0 && this.getAllies().get(0).equals(position))
                             || (werewolves > 0 && !this.getAllies().get(0).equals(position))
                         ) {
-                        // On assigne la race vampire
+                        // Cas où on joue vampire
                         this.setUs(new Player("vampires"));
                         this.setOpponent(new Player("werewolves"));
                     } else {
-                        // Dans tous les autres cas, nous sommes les loup-garous et on met la position dans la liste
-                        // des positions adverses
+                        // Cas où on joue loup-garou
                         this.setUs(new Player("werewolves"));
                         this.setOpponent(new Player("vampires"));
                     }
                 }
-                // Si on a la race, on est dans une assignation update et on assigne juste en fonction de la race
+
+                /* Une fois la race que l'on joue connue, on peut mettre à jour la liste des positions alliées ou
+                 ennemies avec la case reçue.
+                 */
                 if (this.getUs().getRace().equals(kind)) {
+                    // Cas d'une case alliée
 
                     // On ajoute la positiononnée que si elle n'existe pas encore
                     if (!this.getAllies().contains(position)) {
@@ -101,25 +121,27 @@ public class Board implements Serializable {
                     }
 
                     // Si la positiononnée est dans la liste des positions de l'adversaire, on la supprime parce que ça
-                    // veut dire qu'on l'a récupéré
+                    // veut dire qu'on l'a récupérée
                     this.getOpponents().remove(position);
                     // Idem pour les humains
                     this.getHumans().remove(position);
 
                 } else {
+                    // Cas d'une case ennemie
 
                     // On ajoute la position donnée que si elle n'existe pas encore
                     if (!this.getOpponents().contains(position)) {
                         this.getOpponents().add(position);
                     }
 
-                    // Si la positiononnée est dans notre liste de positions, on la supprime parce que ça veut dire que
-                    // l'adversaire nous l'a prise
+                    // Si la position donnée est dans notre liste de positions, on la supprime parce que ça veut dire
+                    // que l'adversaire nous l'a prise
                     this.getAllies().remove(position);
                     // Idem pour les humains
                     this.getHumans().remove(position);
                 }
             } else if (kind.equals("empty")) {
+                // Enfin, si la case reçue est vide, on retire cette case de toutes les listes de positions connues.
                 this.allies.remove(position);
                 this.opponents.remove(position);
                 this.humans.remove(position);
@@ -142,7 +164,7 @@ public class Board implements Serializable {
             Position from = move.getSource();
             Position to = move.getDestination();
 
-            // On trouve la prochaine positiononnée qui nous permet d'arriver au goal en partant de origin
+            // On récupère les cellules de départ et d'arrivée de ce déplacement
             Cell originCell = simulated.cells[from.getX()][from.getY()];
             Cell toCell = simulated.cells[to.getX()][to.getY()];
 
@@ -150,10 +172,13 @@ public class Board implements Serializable {
             ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
             ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
 
-            // Si la cellule d'origine nous appartient
+            // Si la cellule d'origine nous appartient, on ajoute la cellule de destination à nos position, on la retire
+            // des positions ennemies et humaines
             if (originCell.getKind().equals(this.getUs().getRace())) {
                 newAllies.add(to);
                 if (originCell.getPopulation() == move.getItemsMoved()) {
+                    // Si la population déplacée égale la population présente au départ, la cellule est alors vide et on
+                    // la retire de notre liste
                     newAllies.remove(from);
                 }
                 newHumans.remove(to);
@@ -169,29 +194,38 @@ public class Board implements Serializable {
                 newAllies.remove(to);
             }
 
+            // Les listes changées sont ajoutées à la nouvelle carte
             simulated.setHumans(newHumans);
             simulated.setOpponents(newOpponents);
             simulated.setAllies(newAllies);
 
-            // La next cellule devient remplie des valeurs de la quantité bougée (plus la population de la cellule sur laquelle on arrive)
+            // On va maintenant changer la quantité de population présente dans les cases
+
+            // Population de la cellule d'arrivée
             if (toCell.getKind().equals("humans") || toCell.getKind().equals("empty") || toCell.getKind().equals(originCell.getKind())) {
+                // Si la cellule d'arrivée est vide, alliées ou remplit d'humains, on ajoute la population déplacée à la
+                // population déjà présente (les captures d'humains sont forcément effectuée avec certitude de victoire).
                 simulated.cells[to.getX()][to.getY()] = new Cell(
                         originCell.getKind(), move.getItemsMoved() + toCell.getPopulation()
                 );
             } else {
+                // Sinon c'est une attaque sur l'ennemi, seule la population déplacée est présente sur la cellule finale.
                 simulated.cells[to.getX()][to.getY()] = new Cell(originCell.getKind(), move.getItemsMoved());
             }
 
-            // Comme on bouge toutes les troupes, la cellule d'origine est vide
+            // Population de la cellule de départ
             if (originCell.getPopulation() > move.getItemsMoved()) {
+                // Si seulement une partie des troupes est déplacée, la population de départ est réduite
                 simulated.cells[from.getX()][from.getY()] = new Cell(
                         originCell.getKind(), originCell.getPopulation() - move.getItemsMoved()
                 );
             } else {
+                // Si toutes les troupes sont déplacées, la cellule de départ est vide
                 simulated.cells[from.getX()][from.getY()] = new Cell();
             }
         }
 
+        // C'est au tour de l'autre joueur de jouer.
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
         return simulated;
     }
@@ -224,18 +258,7 @@ public class Board implements Serializable {
     }
 
     /**
-     * Récupère la positiononnée initiale de notre joueur
-     * @param home
-     */
-    public void setHome(byte[] home) {
-        // On récupère les données et on les met dans source
-        int x = (int) home[0];
-        int y = (int) home[1];
-        allies.add(new Position(x, y));
-    }
-
-    /**
-     * Calcule notre nombre d'éléments
+     * Calcule la population alliées sur la carte
      * @return
      */
     public int alliesPopulation() {
@@ -243,7 +266,7 @@ public class Board implements Serializable {
     }
 
     /**
-     * Calcule le nombre d'éléments de l'adversaire
+     * Calcule la population ennemie sur la carte
      * @return
      */
     public int opponentsPopulation() {
@@ -251,7 +274,7 @@ public class Board implements Serializable {
     }
 
     /**
-     * Calcule le nombre d'humains
+     * Calcule le population humaine sur la carte
      * @return
      */
     public int humansPopulation() {
@@ -259,6 +282,7 @@ public class Board implements Serializable {
     }
 
     /**
+     * Calcule la population dans une liste de cases données
      * @param positions
      * @return
      */
@@ -270,11 +294,17 @@ public class Board implements Serializable {
         return pop;
     }
 
+    /**
+     * Appelle l'algorithme alpha-beta pour choisir un coup à jouer et renvoit une réponse compréhensible par le serveur.
+     * @return
+     */
     public ArrayList<byte[]> chooseMove() {
+        // On appelle l'algorithme alpha-beta pour choisir notre coup à jouer
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
         ArrayList<Result> results = ab.algorithm(6);
         this.setCurrentPlayer(this.getOpponent());
+        // On parse le résultat obtenu dans un format reconnu par le serveur
         ArrayList<byte[]> parsedResults = new ArrayList<>();
         results.forEach(move -> parsedResults.add(move.parse()));
         return parsedResults;

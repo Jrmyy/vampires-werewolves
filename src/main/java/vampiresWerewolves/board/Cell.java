@@ -26,6 +26,8 @@ public class Cell implements Serializable {
         this.kind = kind;
     }
 
+    /* equals et hashCode nécessaires pour faire des hashmap sur la classe Cell */
+
     @Override
     public String toString() {
         return "Kind: " + kind + ", population: " + population;
