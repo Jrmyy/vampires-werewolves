@@ -231,7 +231,7 @@ public class Board implements Serializable {
     }
 
     /**
-     * Crée une copie d'une MapManager (comme ça on ne touche pas à l'original)
+     * Crée une copie d'un Board (comme ça on ne touche pas à l'original)
      * @param orig
      * @return
      */
@@ -302,7 +302,7 @@ public class Board implements Serializable {
         // On appelle l'algorithme alpha-beta pour choisir notre coup à jouer
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
-        ArrayList<Result> results = ab.algorithm(6);
+        ArrayList<Result> results = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
         // On parse le résultat obtenu dans un format reconnu par le serveur
         ArrayList<byte[]> parsedResults = new ArrayList<>();

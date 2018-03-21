@@ -220,6 +220,11 @@ public class Node {
                 // ajoute également le nombre d'humains mangés par les alliés
                 humansEaten = computeRealMovesMade(goalCombinaition, realMoves, humansEaten);
 
+                // TODO: retirer cette ligne si le serveur est bien mis à jour
+                if(!isSafeMoves(realMoves)) {
+                    continue;
+                }
+
                 // Création d'une nouvelle carte avec les mouvements réels réalisés
                 Board impliedBoard = board.simulateMoves(realMoves);
                 // On crée les nouveaux mouvements alliés comme étant égaux aux anciens + ceux qu'on vient de faire
@@ -256,6 +261,12 @@ public class Node {
                 // remplit realMoves avec les véritables mouvements à faire des sources pour atteindre les cibles, et
                 // ajoute également le nombre d'humains mangés par l'adversaire
                 humansEaten = computeRealMovesMade(goalCombination, realMoves, humansEaten);
+
+                // TODO: retirer cette ligne si le serveur est bien mis à jour
+                if(!isSafeMoves(realMoves)) {
+                    continue;
+                }
+
                 // Création d'une nouvelle carte avec les mouvements réels réalisés
                 Board impliedBoard = board.simulateMoves(realMoves);
                 // On ajoute le nouveau noeud à la liste des alternatives
@@ -339,6 +350,22 @@ public class Node {
     }
 
     /**
+     * Fonction à n'utiliser que si le serveur n'a pas été mis à jour pour la présentation.
+     * Retire d'une liste de coups possibles ceux pour lesquels une case de départ est la même qu'une case d'arrivée.
+     */
+    private boolean isSafeMoves(ArrayList<Result> allMoves) {
+        for (Result simpleMove1: allMoves) {
+            for (Result simpleMove2: allMoves) {
+                // Si un déplacement se termine là où un autre commence, on supprime ce déplacement
+                if (simpleMove1.getSource() == simpleMove2.getDestination()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * Retourne les 3 meilleurs destinations pour une position donnée en fonction de la stratégie à réaliser
      * @param movement
      * @param position
@@ -381,6 +408,17 @@ public class Node {
                         double ratio = (double) humanPop / (double) Utils.minDistance(human, position);
                         // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
                         minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, human, ratio);
+                    }
+                }
+            case "unify":
+                // Un groupe peu chercher à rejoindre un autre groupe de la carte. On cherche simplement à rejoindre le
+                // groupe le plus proche.
+                for (Position allies: board.getAllies()) {
+                    // Si la case alliée visée n'est pas la case actuelle
+                    if (!position.equals(allies)) {
+                        double ratio = 1.0 / (double) Utils.minDistance(allies, position);
+                        // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, allies, ratio);
                     }
                 }
         }
