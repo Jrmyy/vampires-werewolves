@@ -163,6 +163,10 @@ public class Board implements Serializable {
         // On crée d'abord une copie de notre carte
         Board simulated = Board.copy(this);
 
+        ArrayList<Position> newAllies = new ArrayList<>(this.getAllies());
+        ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
+        ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
+
         for (Result move: moves) {
             Position from = move.getSource();
             Position to = move.getDestination();
@@ -170,10 +174,6 @@ public class Board implements Serializable {
             // On récupère les cellules de départ et d'arrivée de ce déplacement
             Cell originCell = simulated.cells[from.getX()][from.getY()];
             Cell toCell = simulated.cells[to.getX()][to.getY()];
-
-            ArrayList<Position> newAllies = new ArrayList<>(this.getAllies());
-            ArrayList<Position> newHumans = new ArrayList<>(this.getHumans());
-            ArrayList<Position> newOpponents = new ArrayList<>(this.getOpponents());
 
             // Si la cellule d'origine nous appartient, on ajoute la cellule de destination à nos position, on la retire
             // des positions ennemies et humaines
