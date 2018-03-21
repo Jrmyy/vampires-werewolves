@@ -1,6 +1,7 @@
 package tcp;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.net.Socket;
@@ -85,11 +86,15 @@ public class TCPClient {
     }
 
     public byte[] listenSET() {
-        return this.baseListen();
+        byte[] dimension = this.baseListen();
+        System.out.println("    Map size : " + dimension[0] + "x" + dimension[1]);
+        return dimension;
     }
 
     public byte[] listenHME() {
-        return this.baseListen();
+        byte[] home = this.baseListen();
+        System.out.println("    Home position is : " + home[0] + "x" + home[1]);
+        return home;
     }
 
     private byte[] baseListen() {
@@ -103,15 +108,36 @@ public class TCPClient {
         return new byte[0];
     }
 
+    public byte[][] listenHUM() {
+        try {
+            byte[] nbHumans = new byte[1];
+            byte[] humanPosition = new byte[2];
+            this.in.read(nbHumans);
+            System.out.println("    " + nbHumans[0] + " humans positions received");
+            byte[][] allHumans = new byte[nbHumans[0]][2];
+            for(int i = 0; i < nbHumans[0]; i++){
+                this.in.read(humanPosition);
+                System.arraycopy( humanPosition, 0, allHumans[i], 0, 2 );
+                System.out.println("    Humans at position " + humanPosition[0] + "x" + humanPosition[1]);
+            }
+            return allHumans;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new byte[0][0];
+    }
+
     public byte[][] listenMAP() {
         try {
             byte[] nbCells = new byte[1];
             byte[] cellContent = new byte[5];
             this.in.read(nbCells);
+            System.out.println("    " + nbCells[0] + " cells to update");
             byte[][] allContents = new byte[nbCells[0]][5];
             for(int i = 0; i < nbCells[0]; i++){
                 this.in.read(cellContent);
                 System.arraycopy( cellContent, 0, allContents[i], 0, 5 );
+                System.out.println("    Cell " + cellContent[0] + "x" + cellContent[1] + " must be updated with " + cellContent[2] + " humans, " + cellContent[3] + " vampires and " + cellContent[4] + " werewolves");
             }
             return allContents;
         } catch (IOException e) {
@@ -129,6 +155,7 @@ public class TCPClient {
             this.out.write(NME);
             this.out.write(nameLength);
             this.out.write(playerName);
+            System.out.println("Name " + player + " of length " + nameLength + " has been sent");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -140,8 +167,10 @@ public class TCPClient {
             byte nbMove = (byte) moves.size();
             this.out.write(MOV);
             this.out.write(nbMove);
+            System.out.println("    " + nbMove + " moves has been sent");
             for (byte[] move: moves) {
                 this.out.write(move);
+                System.out.println("    Move sent : " + move[2] + " units moved from " + move[0] + "x" + move[1] + " to " + move[3] + "x" + move[4]);
             }
         } catch (IOException e) {
             e.printStackTrace();

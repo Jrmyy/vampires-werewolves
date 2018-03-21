@@ -26,6 +26,7 @@ public class Project {
                     map.setMapDimensions(dimensions);
                     break;
                 case "HUM":
+                    byte[][] humans = client.listenHUM();
                     break;
                 case "HME":
                     byte[] home = client.listenHME();
