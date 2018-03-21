@@ -202,8 +202,9 @@ public class Node {
                 }
                 // On ajoute au dictionnaire la clé de l'allié considéré et tous ses mouvements possibles en valeur
                 goalMoves.put(ally, Result.dropDuplicates(allMoves));
-                logger.info("We want to reach : " + goalMoves.get(ally) + " from " + ally);
             }
+
+            logger.info("We want to reach : " + goalMoves);
 
             // On liste toutes les combinaisons possibles des mouvements d'alliés
             List<ArrayList<Result>> allAlliesCombinationsMoves = computeAllMoves(goalMoves);
@@ -238,9 +239,10 @@ public class Node {
                 for (String strategy: MOVEMENT_TYPES) {
                     allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
                 }
-                goalMoves.put(opp, Result.dropDuplicates(allMoves));
-                logger.info("Enemy wants to reach : " + goalMoves.get(opp) + " from " + opp);
-            }
+                goalMoves.put(opp, Result.dropDuplicates(allMoves)); }
+
+            logger.info("Enemy wants to reach : " + goalMoves);
+
 
             // On liste toutes les combinaisons possibles des mouvements d'ennemis
             List<ArrayList<Result>> allEnemiesCombinationsMoves = computeAllMoves(goalMoves);

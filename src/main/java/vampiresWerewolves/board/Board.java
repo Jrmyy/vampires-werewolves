@@ -1,6 +1,7 @@
 package board;
 
 import algorithm.AlphaBeta;
+import algorithm.Node;
 import algorithm.Result;
 import java.io.*;
 import java.util.ArrayList;
@@ -157,6 +158,8 @@ public class Board implements Serializable {
      */
     public Board simulateMoves(ArrayList<Result> moves) {
 
+        Node.logger.info("Simulating moves " + moves + " on map " + this.toString());
+
         // On crée d'abord une copie de notre carte
         Board simulated = Board.copy(this);
 
@@ -227,6 +230,7 @@ public class Board implements Serializable {
 
         // C'est au tour de l'autre joueur de jouer.
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
+        Node.logger.info("Simulated map is " + simulated.toString());
         return simulated;
     }
 
@@ -302,7 +306,7 @@ public class Board implements Serializable {
         // On appelle l'algorithme alpha-beta pour choisir notre coup à jouer
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
-        ArrayList<Result> results = ab.algorithm(6);
+        ArrayList<Result> results = ab.algorithm(3);
         this.setCurrentPlayer(this.getOpponent());
         // On parse le résultat obtenu dans un format reconnu par le serveur
         ArrayList<byte[]> parsedResults = new ArrayList<>();
@@ -401,5 +405,12 @@ public class Board implements Serializable {
     @Override
     public int hashCode() {
         return 24 * currentPlayer.hashCode() + 21 * Arrays.deepHashCode(cells);
+    }
+
+    @Override
+    public String toString() {
+        return "Current player is " + this.getCurrentPlayer() + "\n" + "We have allies at : " + this.allies + "\n" +
+                "We have opponents at : " + this.opponents + "\n" + "We have humans at : " + this.humans + "\n"
+                + "Board is : " + Arrays.deepToString(this.cells);
     }
 }
