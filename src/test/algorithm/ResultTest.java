@@ -2,7 +2,6 @@ package algorithm;
 
 import board.Position;
 import org.junit.jupiter.api.Test;
-import utils.Utils;
 import java.util.ArrayList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
