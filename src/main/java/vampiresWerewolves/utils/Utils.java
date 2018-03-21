@@ -47,8 +47,8 @@ public class Utils {
         Position bestMove = null;
         // Donner un poids aux cases sur lesquelles on se déplace
         HashMap<String, Double> bestMoveKindScore = new HashMap<String, Double>() {{
-            put("empty", 0.0);
-            put(map.getUs().getRace(), 0.5);
+            put("empty", 0.5);
+            put(map.getUs().getRace(), 0.0);
             put(map.getOpponent().getRace(), 1.0);
             put("humans", 1.5);
         }};
