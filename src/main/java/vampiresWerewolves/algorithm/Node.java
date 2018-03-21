@@ -208,7 +208,7 @@ public class Node {
             // On liste toutes les combinaisons possibles des mouvements d'alliés
             List<ArrayList<Result>> allAlliesCombinationsMoves = computeAllMoves(goalMoves);
 
-            logger.info("Moves computed for ally are " + moves);
+            logger.info("Moves computed for ally are " + allAlliesCombinationsMoves);
 
             for (ArrayList<Result> goalCombinaition: allAlliesCombinationsMoves) {
                 // une goalCombination est un tableau de résultats des sources vers les cibles (et non nécessairement
@@ -218,7 +218,7 @@ public class Node {
 
                 // remplit realMoves avec les véritables mouvements à faire des sources pour atteindre les cibles, et
                 // ajoute également le nombre d'humains mangés par les alliés
-                humansEaten = computeRealMovesMade(resultedMoves, realMoves, humansEaten);
+                humansEaten = computeRealMovesMade(goalCombinaition, realMoves, humansEaten);
 
                 // Création d'une nouvelle carte avec les mouvements réels réalisés
                 Board impliedBoard = board.simulateMoves(realMoves);
@@ -243,11 +243,11 @@ public class Node {
             }
 
             // On liste toutes les combinaisons possibles des mouvements d'ennemis
-            List<ArrayList<Result>> allEnnemiesCombinationsMoves = computeAllMoves(goalMoves);
+            List<ArrayList<Result>> allEnemiesCombinationsMoves = computeAllMoves(goalMoves);
 
-           logger.info("Moves computed for opp are " + moves);
+           logger.info("Moves computed for opp are " + allEnemiesCombinationsMoves);
 
-            for (ArrayList<Result> goalCombination : allEnnemiesCombinationsMoves) {
+            for (ArrayList<Result> goalCombination : allEnemiesCombinationsMoves) {
                 // une goalCombination est un tableau de résultats des sources vers les cibles (et non nécessairement
                 // vers le véritable move qui va être fait, les cibles n'étant pas nécessairement adjacentes aux sources)
                 ArrayList<Result> realMoves = new ArrayList<>();
@@ -278,37 +278,43 @@ public class Node {
                 humansEaten += nextMoveCell.getPopulation();
             }
 
-            Result move = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
-            realMoves.add(move);
+            // On ajoute le véritable move à la liste des mouvements réels
+            Result realMove = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
+            realMoves.add(realMove);
         }
         return humansEaten;
     }
 
-    public Board getBoard() {
-        return board;
-    }
-
-    public void setBoard(Board board) {
-        this.board = board;
-    }
-
-    public ArrayList<ArrayList<Result>> getAllyMoves() {
-        return allyMoves;
-    }
-
+    /**
+     * Vérifie si une liste de mouvements de troupes est correct
+     *      - Toutes les troupes visent des objectifs différents
+     *      - Les troupes ne font pas de mouvements circulaires (ils vont tous se rejoindre l'un l'autre)
+     * @param combination
+     * @return
+     */
     private static boolean isValidCombination(ArrayList<Result> combination) {
         // On supprime les combinaisons d'éléments qui vont au même endroit
         ArrayList<Position> goals = new ArrayList<>();
         for (Result move: combination) {
+            // Si la destination n'existe pas, on l'ajoute à la liste des destinations
             if (!goals.contains(move.getDestination())) {
                 goals.add(move.getDestination());
             } else {
+                // Sinon ça veut dire que deux éléments vont au même endroit, et on retourne faux
                 return false;
             }
         }
+
+        // Si tous les éléments vont à des endroits différents, on vérifie que la combinaison n'est pas un cycle
         return !Result.isCircular(combination);
     }
 
+    /**
+     * A partir d'un dictionnaire du type {(1,1) : [(2,2), (2,5), (3,6): [(4,4), (3,7)]} retourner
+     * [[(1,1) -> (2,2), (3,6) -> (4,4)], [(1,1) -> (2,5), (3,6) -> (4,4)], [(1,1) -> (2,2), (3,6) -> (3,7)], [(1,1) -> (2,5), (3,6) -> (3,7)]
+     * @param goalMoves
+     * @return
+     */
     private List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
         List<ArrayList<Result>> allMoves = new ArrayList<>();
         int solutions = 1;
@@ -332,6 +338,12 @@ public class Node {
         return allMoves;
     }
 
+    /**
+     * Retourne les 3 meilleurs destinations pour une position donnée en fonction de la stratégie à réaliser
+     * @param movement
+     * @param position
+     * @return
+     */
     private ArrayList<Result> findBestMoveForStrategy(String movement, Position position) {
         int population = board.getCells()[position.getX()][position.getY()].getPopulation();
         ArrayList<Position> keptPositions = new ArrayList<>();
@@ -347,8 +359,10 @@ public class Node {
                         minOpponentPop = (double) oppPop;
                         minOpponent = opp;
                     }
+                    // Si on peut battre l'adversaire à coup sûr
                     if (population > 1.5 * oppPop) {
                         double ratio = (double) oppPop / (double) Utils.minDistance(opp, position);
+                        // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
                         minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, opp, ratio);
                     }
                 }
@@ -359,16 +373,20 @@ public class Node {
                 }
             case "transform":
                 // En début de partie, le but sera de grossir le plus possible et donc de manger le plus d'humains
-                // possibles
+                // possibles, donc de réaliser des transformations
                 for (Position human: board.getHumans()) {
                     int humanPop = board.getCells()[human.getX()][human.getY()].getPopulation();
+                    // Si on peut battre l'humain à coup sûr
                     if (population >= humanPop) {
                         double ratio = (double) humanPop / (double) Utils.minDistance(human, position);
+                        // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
                         minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, human, ratio);
                     }
                 }
         }
 
+        // Pour chacune position gardée, on crée un nouveau résultat, de la position étudiée vers la position gardée,
+        // avec la population de la cellule étudiée
         ArrayList<Result> moves = new ArrayList<>();
         for (Position kept: keptPositions) {
             moves.add(new Result(position, population, kept));
@@ -376,6 +394,17 @@ public class Node {
         return moves;
     }
 
+    /**
+     * Choisit si oui ou non on doit ajouter l'élément à liste. On l'ajoute si la taille est <= 3 et sinon on l'ajoute
+     * que si le ratio est meilleur que le ratio minimal de la liste (on récrée ensuite le ratio minimal de la liste
+     * s'il y a insertion)
+     * @param position
+     * @param keptPositions
+     * @param minRatio
+     * @param other
+     * @param ratio
+     * @return
+     */
     private double addOrNotToKeptPositions(Position position, ArrayList<Position> keptPositions, double minRatio,
                                            Position other, double ratio) {
 
@@ -404,6 +433,18 @@ public class Node {
         }
 
         return minRatio;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public ArrayList<ArrayList<Result>> getAllyMoves() {
+        return allyMoves;
     }
 
     private int getHumansEaten() {
