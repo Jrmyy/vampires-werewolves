@@ -40,6 +40,10 @@ public class Project {
                     byte[][] update = client.listenMAP();
                     map.fillOrUpdateMap(update);
                     ArrayList<byte[]> moves = map.chooseMove();
+                    if (moves.size() == 0) {
+                        System.out.println("WARNING: RANDOM MOVE USED");
+                        moves = map.chooseRandomMove();
+                    }
                     client.sendMove(moves);
                     break;
                 case "BYE":

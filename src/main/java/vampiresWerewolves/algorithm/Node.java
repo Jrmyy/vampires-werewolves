@@ -32,7 +32,7 @@ public class Node {
     private int humansEatenByOpponent = 0;
 
     // Type de stratégie étudiée pour la création des branches
-    private static final String[] MOVEMENT_TYPES = {"transform"};
+    private static final String[] MOVEMENT_TYPES = {"transform", "attack", "unify"};
 
     // Cache de l'heuristique : permet d'éviter de calculer des branches identiques à d'autres précédemment étudiées
     private static HashMap<Integer, Double> heuristicCache = new HashMap<>();
@@ -221,6 +221,14 @@ public class Node {
                 // ajoute également le nombre d'humains mangés par les alliés
                 humansEaten = computeRealMovesMade(goalCombinaition, realMoves, humansEaten);
 
+                // On retire les mouvements correspondant à des groupes immobiles
+                ArrayList<Result> toRemove = new ArrayList<>();
+                for (Result move: realMoves) {
+                    if (move.getDestination().equals(move.getSource())) {
+                            toRemove.add(move);
+                    }
+                }
+                realMoves.removeAll(toRemove);
                 // TODO: retirer cette ligne si le serveur est bien mis à jour
                 if(!isSafeMoves(realMoves)) {
                     continue;
@@ -264,6 +272,14 @@ public class Node {
                 // ajoute également le nombre d'humains mangés par l'adversaire
                 humansEaten = computeRealMovesMade(goalCombination, realMoves, humansEaten);
 
+                // On retire les mouvements correspondant à des groupes immobiles
+                ArrayList<Result> toRemove = new ArrayList<>();
+                for (Result move: realMoves) {
+                    if (move.getDestination().equals(move.getSource())) {
+                        toRemove.add(move);
+                    }
+                }
+                realMoves.removeAll(toRemove);
                 // TODO: retirer cette ligne si le serveur est bien mis à jour
                 if(!isSafeMoves(realMoves)) {
                     continue;
@@ -359,12 +375,12 @@ public class Node {
         for (Result simpleMove1: allMoves) {
             for (Result simpleMove2: allMoves) {
                 // Si un déplacement se termine là où un autre commence, on supprime ce déplacement
-                if (simpleMove1.getSource() == simpleMove2.getDestination()) {
+                if (simpleMove1.getSource().equals(simpleMove2.getDestination())) {
                     return false;
                 }
             }
         }
-        return true;
+        return (allMoves.size()>0);
     }
 
     /**
@@ -414,7 +430,8 @@ public class Node {
                 }
             case "unify":
                 // Un groupe peu chercher à rejoindre un autre groupe de la carte. On cherche simplement à rejoindre le
-                // groupe le plus proche.
+                // groupe le plus proche. On utilise aussi la possibilité de rester sur place pour éviter que deux groupes
+                // adjacents passent leur temps à se croiser.
                 for (Position allies: board.getAllies()) {
                     // Si la case alliée visée n'est pas la case actuelle
                     if (!position.equals(allies)) {
@@ -423,6 +440,7 @@ public class Node {
                         minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, allies, ratio);
                     }
                 }
+                minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, position, 2.0);
         }
 
         // Pour chacune position gardée, on crée un nouveau résultat, de la position étudiée vers la position gardée,
