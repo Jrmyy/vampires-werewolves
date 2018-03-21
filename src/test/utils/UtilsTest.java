@@ -5,12 +5,9 @@ import board.Cell;
 import board.Player;
 import board.Position;
 import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UtilsTest {

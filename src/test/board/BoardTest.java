@@ -1,16 +1,9 @@
 package board;
 
-import org.junit.Before;
 import org.junit.Test;
-import utils.Utils;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 
