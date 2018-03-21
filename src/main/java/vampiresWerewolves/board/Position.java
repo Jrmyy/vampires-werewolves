@@ -16,6 +16,8 @@ public class Position implements Serializable, Comparable<Position> {
         this.y = y;
     }
 
+    /* equals, hashCode et compareTo nécessaires pour faire des hashmap sur la classe Position */
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Position) {

@@ -2,6 +2,9 @@ package board;
 
 import java.io.Serializable;
 
+/**
+ * Objet pour représenter un joueur par sa race jouée
+ */
 public class Player implements Serializable {
 
     private String race;
@@ -13,6 +16,8 @@ public class Player implements Serializable {
     public String getRace() {
         return race;
     }
+
+    /* equals et hashCode nécessaires pour faire des hashmap sur la classe Cell */
 
     @Override
     public boolean equals(Object obj) {
