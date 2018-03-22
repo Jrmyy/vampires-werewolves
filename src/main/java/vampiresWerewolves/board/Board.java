@@ -1,11 +1,14 @@
 package board;
 
+import utils.Utils;
+
 import algorithm.AlphaBeta;
 import algorithm.Node;
 import algorithm.Result;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Board implements Serializable {
 
@@ -337,12 +340,35 @@ public class Board implements Serializable {
         // On appelle l'algorithme alpha-beta pour choisir notre coup à jouer
         this.setCurrentPlayer(this.getUs());
         AlphaBeta ab = new AlphaBeta(this);
-        ArrayList<Result> results = ab.algorithm(3);
+        // Profondeur en fonction du nombre de groupes actuels
+        int depth = Math.max(3, 8 - this.getAllies().size() - this.getOpponents().size());
+        ArrayList<Result> results = ab.algorithm(depth);
         this.setCurrentPlayer(this.getOpponent());
         // On parse le résultat obtenu dans un format reconnu par le serveur
         ArrayList<byte[]> parsedResults = new ArrayList<>();
         results.forEach(move -> parsedResults.add(move.parse()));
         return parsedResults;
+    }
+
+    /**
+     * Déplace aléatoirement un des groupes alliés. Cette fonction n'est à appeler qu'en dernier recours.
+     * @return
+     */
+    public ArrayList<byte[]> chooseRandomMove() {
+        Random randomGenerator = new Random();
+        Position randomPosition = this.allies.get(randomGenerator.nextInt(this.allies.size()));
+        int population = this.getCells()[randomPosition.getX()][randomPosition.getY()].getPopulation();
+        ArrayList<Position> destinations = Utils.findAdjacentCells(this.cols, this.rows, randomPosition);
+        Position randomDestination = destinations.get(randomGenerator.nextInt(destinations.size()));
+        byte[] result = new byte[5];
+        result[0] = (byte) randomPosition.getX();
+        result[1] = (byte) randomPosition.getY();
+        result[2] = (byte) population;
+        result[3] = (byte) randomDestination.getX();
+        result[4] = (byte) randomDestination.getY();
+        ArrayList<byte[]> resultList = new ArrayList<>();
+        resultList.add(result);
+        return resultList;
     }
 
     /**

@@ -26,6 +26,7 @@ public class Project {
                     map.setMapDimensions(dimensions);
                     break;
                 case "HUM":
+                    byte[][] humans = client.listenHUM();
                     break;
                 case "HME":
                     byte[] home = client.listenHME();
@@ -39,6 +40,10 @@ public class Project {
                     byte[][] update = client.listenMAP();
                     map.fillOrUpdateMap(update);
                     ArrayList<byte[]> moves = map.chooseMove();
+                    if (moves.size() == 0) {
+                        System.out.println("WARNING: RANDOM MOVE USED");
+                        moves = map.chooseRandomMove();
+                    }
                     client.sendMove(moves);
                     break;
                 case "BYE":

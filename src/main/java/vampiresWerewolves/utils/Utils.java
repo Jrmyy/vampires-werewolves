@@ -93,7 +93,7 @@ public class Utils {
      * @param start : Position de départ
      * @return
      */
-    private static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
+    public static ArrayList<Position> findAdjacentCells(Integer cols, Integer rows, Position start) {
 
         ArrayList<Position> adjacentCells = new ArrayList<>();
 
