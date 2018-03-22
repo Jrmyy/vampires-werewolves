@@ -6,7 +6,7 @@
 + **[1. Prérequis](#prerequisites)**
 + **[2. La structure du code](#code_structure)**
 + **[3. Structure de l'IA](#ia_struct)**
-+ **[4. L'implémentation de l'algorithme MinMax](#alg_implementation)**
++ **[4. L'implémentation de l'algorithme AlphaBeta](#alg_implementation)**
   + **[4.1. Le déroulé général](#general_behavior)**
   + **[4.2. La création des alternatives/branches](#branches)**
   + **[4.3. Séparation et rassemblement](#split_merge)**
@@ -27,25 +27,25 @@
 - **board :** Ce package donne une représentation en objet du jeu. Il contient donc 4 classes : 
   - `Board`: Cette classe est une représentation du plateau de jeu, et contient la liste des positions de chacune des espèces, ainsi que le contenu de chacune des cellules de la carte.
   - `Position`: Cette classe représente une position sur la carte, et est donc donnée par deux coordonnées x et y.
-  - `Player`: Définie par une race, cette classe permet de définir les deux joueurs et de savoir qui est le joueur actif lors du déroulé de l'algorithme MinMax.
+  - `Player`: Définie par une race, cette classe permet de définir les deux joueurs et de savoir qui est le joueur actif lors du déroulé de l'algorithme AlphaBeta.
   - `Cell`: Cette classe représente le contenu d'une cellule de la carte. Elle est donc définie par une race qui la peuple et par une population.
 - **algorithm :** Ce package contient toute l'intelligence de notre programme, l'algorithme qui est exécuté à chacun de nos tours et visant à fournir le meilleur déplacement possible:
   - `Result`: Cette classe est une représentation d'un résultat de mouvement, et se constitue donc d'une position source, d'une destination, et d'un nombre d'unités déplacées.
-  - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme MinMax et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
-  - `MinMax`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. </p>
+  - `Node`: La classe `Node` est un noeud de l'arbre créé par l'algorithme AlphaBeta et se constitue donc d'une carte associée et également du nombre d'humains mangés par nous et l'adversaire depuis le début de l'algorithme jusqu'à la carte créée.
+  - `AlphaBeta`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. </p>
   
 ### 3. Architecture de l'IA et Représentation de l'environnement <a name="ia_struct"></a>
   
-### 4. L'implémentation de l'algorithme MinMax <a name="alg_implementation"></a>
+### 4. L'implémentation de l'algorithme AlphaBeta <a name="alg_implementation"></a>
 
 #### 4.1. Le déroulé général <a name="general_behavior"></a>
 
 <p align="justify">A chacun de notre tour, le programme réagit de la manière suivante:
 
 1. A chaque tour, on récupère la trame d'update de la carte et on appelle alors la méthode `fillOrUpdate` de `Board` **(Board L. 54)**. Cette méthode est appelée au début de la partie pour créer toute la carte mais également à chaque tour afin de garder la carte dans la même état que le serveur.
-2. Une fois la carte mise à jour, on va envoyer nos mouvements. Pour se faire, la classe `Board` va instantier une instance de `MinMax` avec comme racine de l'arbre la carte courante, avant notre tour de jeu. **(Board, L. 299)**
-3. On va alors appeler la méthode `algorithm` de `MinMax` à une profondeur 3. **(Board L. 300)**
-4. Cette fonction va simplement appeler `minMax` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(MinMax L. 31)**
+2. Une fois la carte mise à jour, on va envoyer nos mouvements. Pour se faire, la classe `Board` va instantier une instance de `AlphaBeta` avec comme racine de l'arbre la carte courante, avant notre tour de jeu. **(Board, L. 299)**
+3. On va alors appeler la méthode `algorithm` de `AlphaBeta` à une profondeur 3. **(Board L. 300)**
+4. Cette fonction va simplement appeler `AlphaBeta` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(AlphaBeta L. 31)**
 </p>
 
 #### 4.2. La création des alternatives/branches <a name="branches"></a>
@@ -86,7 +86,7 @@ Avec dans cette équation, `est_plus_proche`, définie par :
   </p>
 </figure>
 
-Ainsi, en pratique, le raisonnement est le suivant: pour chaque groupe d'humains, on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(MinMax L. 88 - L. 115)**
+Ainsi, en pratique, le raisonnement est le suivant: pour chaque groupe d'humains, on va chercher l'ennemi le plus proche dont la population dépasse la population d'humains sur la case. On fait la même chose pour les alliés. Si la distance minimum est celle de l'ennemi, ou que les distances sont égales mais que c'est à nous de jouer, alors on ajoute la valeur du ratio ![human ratio](./report/human_ratio.png "Nombre d'humains / distance minimale"). Dans le cas contraire, le ratio est retiré du score. **(AlphaBeta L. 88 - L. 115)**
 
 **Calcul de la fonction d'évaluation des opposants:**
 
@@ -108,12 +108,11 @@ Où la fonction `score` est déterminée de la manière suivante:
   </p>
 </figure>
 
-Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(MinMax L. 117 - L. 141)**.
+Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(AlphaBeta L. 117 - L. 141)**.
 
 ### 5. Idées d'amélioration <a name="next_steps"></a>
 
 Afin d'améliorer notre IA, nous aurions également pu: 
-- Elaguer notre algorithme MinMax, pour le transformer en algorithme Alpha Beta, ce qui économiserait du temps de calcul
 - Entrainer plusieurs algorithmes (AlphaBeta, SSS...) pour déterminer le plus efficace sur un nombre représentatif de parties
-- Mieux choisir les branches étudiées lors de l'execution de l'algorithme MinMax
+- Mieux choisir les branches étudiées lors de l'execution de l'algorithme AlphaBeta
 - Augmenter la profondeur de l'arbre pour évaluer plus de coups de l'adversaire et mieux comparer les différents scénarios possibles
