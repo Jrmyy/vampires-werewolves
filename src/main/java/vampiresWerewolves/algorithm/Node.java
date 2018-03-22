@@ -234,14 +234,10 @@ public class Node {
                         humansEaten += nextMoveCell.getPopulation();
                     }
 
-                // On retire les mouvements correspondant à des groupes immobiles
-                ArrayList<Result> toRemove = new ArrayList<>();
-                for (Result move: realMoves) {
-                    if (move.getDestination().equals(move.getSource())) {
-                            toRemove.add(move);
-                    }
+                    // On ajoute le véritable move à la liste des mouvements réels
+                    Result realMove = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
+                    realMoves.add(realMove);
                 }
-                realMoves.removeAll(toRemove);
 
                 if (!Result.isCircular(realMoves)) {
                     // Création d'une nouvelle carte avec les mouvements réels réalisés
