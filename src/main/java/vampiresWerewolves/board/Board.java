@@ -42,6 +42,10 @@ public class Board implements Serializable {
         }
     }
 
+    public boolean isGameOver() {
+        return this.allies.size() == 0 || this.opponents.size() == 0;
+    }
+
     /**
      * Récupère la position de départ de notre joueur (après réception de la commande HME)
      * @param home
@@ -51,6 +55,24 @@ public class Board implements Serializable {
         int x = (int) home[0];
         int y = (int) home[1];
         allies.add(new Position(x, y));
+    }
+
+    public int getHomesByKind(String kind) {
+        switch (kind) {
+            case "humans":
+                return this.humans.size();
+            case "vampires":
+                if (this.us.getRace().equals("vampires")) {
+                    return this.allies.size();
+                }
+                return this.opponents.size();
+            case "werewolves":
+                if (this.us.getRace().equals("werewolves")) {
+                    return this.allies.size();
+                }
+                return this.opponents.size();
+        }
+        return 0;
     }
 
     /**
@@ -158,7 +180,7 @@ public class Board implements Serializable {
      */
     public Board simulateMoves(ArrayList<Result> moves) {
 
-        Node.logger.info("Simulating moves " + moves + " on map " + this.toString());
+        // Node.logger.info("Simulating moves " + moves + " on map " + this.toString());
 
         // On crée d'abord une copie de notre carte
         Board simulated = Board.copy(this);
@@ -234,9 +256,9 @@ public class Board implements Serializable {
 
         // C'est au tour de l'autre joueur de jouer.
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
-        Node.logger.info("Simulated map is " + simulated.toString());
+        // Node.logger.info("Simulated map is " + simulated.toString());
 
-        if (!simulated.checkCoherency()) {
+        if (!simulated.checkConsistency()) {
             System.out.println("/!\\ Board not coherent :\n" + simulated.toString());
         }
 
@@ -327,7 +349,7 @@ public class Board implements Serializable {
      * Vérifie si la carte actuelle est cohérente
      * @return
      */
-    public boolean checkCoherency() {
+    private boolean checkConsistency() {
         for (Position human: this.getHumans()) {
             if (!this.getCells()[human.getX()][human.getY()].getKind().equals("humans")) {
                 System.out.println("Not coherent because of humans at " + human.toString());

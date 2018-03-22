@@ -1,11 +1,14 @@
 package algorithm;
 
+import board.Board;
+import board.Cell;
 import board.Position;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Classe qui représente un résultat de mouvement, que l'on peut ensuite parser pour l'envoyer au serveur
@@ -77,6 +80,60 @@ public class Result {
         Collections.sort(destinations);
         // On regarde si les listes sont égales
         return sources.equals(destinations);
+    }
+
+     /**
+     * Fonction à n'utiliser que si le serveur n'a pas été mis à jour pour la présentation.
+     * Retire d'une liste de coups possibles ceux pour lesquels une case de départ est la même qu'une case d'arrivée.
+      */
+    public static boolean isSafeMove(ArrayList<Result> allMoves) {
+        for (Result simpleMove1: allMoves) {
+            for (Result simpleMove2: allMoves) {
+                // Si un déplacement se termine là où un autre commence, on supprime ce déplacement
+                if (simpleMove1.getSource() == simpleMove2.getDestination()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static ArrayList<ArrayList<Result>> permute(ArrayList<Result> combination) {
+
+        if (combination.size() == 1) {
+            ArrayList<ArrayList<Result>> permuted = new ArrayList<>();
+            ArrayList<Result> first = new ArrayList<>();
+            first.add(combination.get(0));
+            permuted.add(first);
+            return permuted;
+        }
+
+        if (combination.size() == 2) {
+            ArrayList<ArrayList<Result>> permuted = new ArrayList<>();
+            ArrayList<Result> first = new ArrayList<>();
+            first.add(combination.get(0));
+            first.add(combination.get(1));
+            permuted.add(first);
+
+            ArrayList<Result> second = new ArrayList<>();
+            second.add(combination.get(1));
+            second.add(combination.get(0));
+            permuted.add(second);
+
+            return permuted;
+        }
+
+       ArrayList<ArrayList<Result>> allPermuted = new ArrayList<>();
+
+       for (Result res: combination) {
+           ArrayList<Result> sub = new ArrayList<>(combination);
+           sub.remove(res);
+           ArrayList<ArrayList<Result>> permuted = permute(sub);
+           permuted.forEach(x -> x.add(res));
+           allPermuted.addAll(permuted);
+       }
+
+       return allPermuted;
     }
 
     @Override

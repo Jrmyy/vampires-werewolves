@@ -18,7 +18,7 @@ public class MinMax extends Algorithm{
     public ArrayList<Result> algorithm(int depth){
         // On lance minmax avec comme noeud courant le noeud racine
         minMax(root, depth);
-        Node.logger.info("Best moves chosen are " + bestMoves);
+        // Node.logger.info("Best moves chosen are " + bestMoves);
         // On retourne les meilleurs mouvements
         return bestMoves;
     }
@@ -51,7 +51,7 @@ public class MinMax extends Algorithm{
                     bestValue = temp;
                     // Si on est à la racine, on assigne les valeurs des mouvements à faire
                     if (node == root) {
-                        Node.logger.info("Heuristic for max for best move is " + bestValue);
+                        // Node.logger.info("Heuristic for max for best move is " + bestValue);
                         bestMoves = child.getAllyMoves().get(0);
                     }
                 }

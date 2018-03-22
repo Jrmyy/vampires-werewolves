@@ -32,7 +32,7 @@ public class Node {
     private int humansEatenByOpponent = 0;
 
     // Type de stratégie étudiée pour la création des branches
-    private static final String[] MOVEMENT_TYPES = {"transform"};
+    private static final String[] MOVEMENT_TYPES = {"transform", "attack", "unify", "escape"};
 
     // Cache de l'heuristique : permet d'éviter de calculer des branches identiques à d'autres précédemment étudiées
     private static HashMap<Integer, Double> heuristicCache = new HashMap<>();
@@ -60,7 +60,7 @@ public class Node {
         // Si la carte a déjà été calculée précédemment, on renvoie directement le score déjà calculé
         if (heuristicCache.keySet().contains(map.hashCode())) {
             double score = heuristicCache.get(map.hashCode());
-            logger.info("Already in cache, returning result : " + score + " for move " + this.allyMoves.get(0));
+            // logger.info("Already in cache, returning result : " + score + " for move " + this.allyMoves.get(0));
             return score;
         }
 
@@ -117,24 +117,23 @@ public class Node {
                 }
             }
 
-            // Si :
-            // - la distance est inférieure à 2
-            // - la distance est de 1 mais c'est à nous de jouer
-            // Alors :
-            // - si on est certains de gagner, on ajoute au score le ratio nombre d'ennemis / distance min
-            // - si on est certains de perdre, on retire au score le ratio nombre d'alliés / distance min
-            // - sinon on calcule le score selon les lois de probabilités d'une bataille
-            if (minDistance <= 2 || (minDistance == 1 && map.getCurrentPlayer().equals(map.getUs()))) {
+            if (opponent != null) {
+                // Si :
+                // - la distance est inférieure à 2
+                // - la distance est de 1 mais c'est à nous de jouer
+                // Alors :
+                // - si on est certains de gagner, on ajoute au score le ratio nombre d'ennemis / distance min
+                // - si on est certains de perdre, on retire au score le ratio nombre d'alliés / distance min
+                // - sinon on calcule le score selon les lois de probabilités d'une bataille
                 int allyPop = map.getCells()[ally.getX()][ally.getY()].getPopulation();
                 int opponentPop = map.getCells()[opponent.getX()][opponent.getY()].getPopulation();
                 if (allyPop > 1.5 * opponentPop) {
                     score += opponentPop / minDistance;
                 } else if (1.5 * allyPop < opponentPop) {
-                    score -= allyPop / Math.max(1, minDistance);
+                    score -= allyPop / minDistance;
                 } else {
                     double p = allyPop / (2 * opponentPop);
-                    score += Math.pow(p, 2) * allyPop / Math.max(1, minDistance)
-                            - Math.pow(1 - p, 2) * opponentPop / Math.max(1, minDistance);
+                    score += Math.pow(p, 2) * allyPop / minDistance - Math.pow(1 - p, 2) * opponentPop / minDistance;
                 }
             }
         }
@@ -145,7 +144,7 @@ public class Node {
         // On retire au score 2 fois le nombre d'humains mangés par des ennemis depuis la source de cette branche
         score -= 2 * this.getHumansEatenByOpponent();
 
-        logger.info("Heuristic for move " + this.getAllyMoves().get(0) + " is " + score);
+        // logger.info("Heuristic for move " + this.getAllyMoves().get(0) + " is " + score);
 
         // On ajoute le score de la carte donnée dans le cache
         heuristicCache.put(map.hashCode(), score);
@@ -190,8 +189,10 @@ public class Node {
                                 earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                             }
                         }
+                        if (this.board.getAllies().size() < 3) {
+                            allMoves.addAll(earlyMovesSplit);
+                        }
                         // on liste tous les mouvements possibles
-                        allMoves.addAll(earlyMovesSplit);
                         allMoves.addAll(earlyMoves);
 
                     } else {
@@ -204,14 +205,14 @@ public class Node {
                 goalMoves.put(ally, Result.dropDuplicates(allMoves));
             }
 
-            logger.info("We want to reach : " + goalMoves);
+            // logger.info("We want to reach : " + goalMoves);
 
             // On liste toutes les combinaisons possibles des mouvements d'alliés
             List<ArrayList<Result>> allAlliesCombinationsMoves = computeAllMoves(goalMoves);
 
-            logger.info("Moves computed for ally are " + allAlliesCombinationsMoves);
+            // logger.info("Moves computed for ally are " + allAlliesCombinationsMoves);
 
-            for (ArrayList<Result> goalCombinaition: allAlliesCombinationsMoves) {
+            for (ArrayList<Result> goalCombination: allAlliesCombinationsMoves) {
                 // une goalCombination est un tableau de résultats des sources vers les cibles (et non nécessairement
                 // vers le véritable move qui va être fait, les cibles n'étant pas nécessairement adjacentes aux sources)
                 ArrayList<Result> realMoves = new ArrayList<>();
@@ -219,20 +220,37 @@ public class Node {
 
                 // remplit realMoves avec les véritables mouvements à faire des sources pour atteindre les cibles, et
                 // ajoute également le nombre d'humains mangés par les alliés
-                humansEaten = computeRealMovesMade(goalCombinaition, realMoves, humansEaten);
+                // Pour chaque mouvement planifié, on calcule les coordonnées de la cellule adjacente sur laquelle on
+                // doit se déplacer
+                for (Result res: goalCombination) {
+                    // On détermine le meilleur chemin possible (par exemple passant par d'autres points d'intérêts)
+                    // vers la cible
+                    Position nextMoveFromGoal = Utils.findNextMove(
+                            board, res.getSource(), res.getDestination(), res.getItemsMoved()
+                    );
+                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
+                    // Si la cellule choisie contient un nombre non nul d'humains, on l'ajoute à humansEaten
+                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
+                        humansEaten += nextMoveCell.getPopulation();
+                    }
 
-                // TODO: retirer cette ligne si le serveur est bien mis à jour
-                if(!isSafeMoves(realMoves)) {
-                    continue;
+                    // On ajoute le véritable move à la liste des mouvements réels
+                    Result realMove = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
+                    realMoves.add(realMove);
                 }
 
-                // Création d'une nouvelle carte avec les mouvements réels réalisés
-                Board impliedBoard = board.simulateMoves(realMoves);
-                // On crée les nouveaux mouvements alliés comme étant égaux aux anciens + ceux qu'on vient de faire
-                ArrayList<ArrayList<Result>> newAllyMoves = new ArrayList<>(this.allyMoves);
-                newAllyMoves.add(realMoves);
-                // On ajoute le nouveau noeud à la liste des alternatives
-                alternatives.add(new Node(impliedBoard, newAllyMoves, humansEaten, this.humansEatenByOpponent));
+                if (!Result.isCircular(realMoves)) {
+                    // Création d'une nouvelle carte avec les mouvements réels réalisés
+                    Board impliedBoard = board.simulateMoves(realMoves);
+
+                    if (impliedBoard.getAllies().size() <= 3) {
+                        // On crée les nouveaux mouvements alliés comme étant égaux aux anciens + ceux qu'on vient de faire
+                        ArrayList<ArrayList<Result>> newAllyMoves = new ArrayList<>(this.allyMoves);
+                        newAllyMoves.add(realMoves);
+                        // On ajoute le nouveau noeud à la liste des alternatives
+                        alternatives.add(new Node(impliedBoard, newAllyMoves, humansEaten, this.humansEatenByOpponent));
+                    }
+                }
             }
 
         } else {
@@ -246,13 +264,13 @@ public class Node {
                 }
                 goalMoves.put(opp, Result.dropDuplicates(allMoves)); }
 
-            logger.info("Enemy wants to reach : " + goalMoves);
+            // logger.info("Enemy wants to reach : " + goalMoves);
 
 
             // On liste toutes les combinaisons possibles des mouvements d'ennemis
             List<ArrayList<Result>> allEnemiesCombinationsMoves = computeAllMoves(goalMoves);
 
-           logger.info("Moves computed for opp are " + allEnemiesCombinationsMoves);
+           // logger.info("Moves computed for opp are " + allEnemiesCombinationsMoves);
 
             for (ArrayList<Result> goalCombination : allEnemiesCombinationsMoves) {
                 // une goalCombination est un tableau de résultats des sources vers les cibles (et non nécessairement
@@ -262,40 +280,34 @@ public class Node {
 
                 // remplit realMoves avec les véritables mouvements à faire des sources pour atteindre les cibles, et
                 // ajoute également le nombre d'humains mangés par l'adversaire
-                humansEaten = computeRealMovesMade(goalCombination, realMoves, humansEaten);
+                for (Result res: goalCombination) {
+                    // On détermine le meilleur chemin possible (par exemple passant par d'autres points d'intérêts)
+                    // vers la cible
+                    Position nextMoveFromGoal = Utils.findNextMove(
+                            board, res.getSource(), res.getDestination(), res.getItemsMoved()
+                    );
+                    Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
+                    // Si la cellule choisie contient un nombre non nul d'humains, on l'ajoute à humansEaten
+                    if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
+                        humansEaten += nextMoveCell.getPopulation();
+                    }
 
-                // TODO: retirer cette ligne si le serveur est bien mis à jour
-                if(!isSafeMoves(realMoves)) {
-                    continue;
+                    // On ajoute le véritable move à la liste des mouvements réels
+                    Result realMove = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
+                    realMoves.add(realMove);
                 }
 
-                // Création d'une nouvelle carte avec les mouvements réels réalisés
-                Board impliedBoard = board.simulateMoves(realMoves);
-                // On ajoute le nouveau noeud à la liste des alternatives
-                alternatives.add(new Node(impliedBoard, this.allyMoves, this.humansEatenByOpponent, humansEaten));
+                if (!Result.isCircular(realMoves)) {
+                    // Création d'une nouvelle carte avec les mouvements réels réalisés
+                    Board impliedBoard = board.simulateMoves(realMoves);
+                    // On ajoute le nouveau noeud à la liste des alternatives
+                    alternatives.add(new Node(impliedBoard, this.allyMoves, this.humansEatenByOpponent, humansEaten));
+                }
             }
         }
 
         // On retourne les différentes alternatives possibles
         return alternatives;
-    }
-
-    private int computeRealMovesMade(ArrayList<Result> resultedMoves, ArrayList<Result> realMoves, int humansEaten) {
-        // Pour chaque mouvement planifié, on calcule les coordonnées de la cellule adjacente sur laquelle on doit se déplacer
-        for (Result res: resultedMoves) {
-            // On détermine le meilleur chemin possible (par exemple passant par d'autres points d'intérêts) vers la cible
-            Position nextMoveFromGoal = Utils.findNextMove(board, res.getSource(), res.getDestination(), res.getItemsMoved());
-            Cell nextMoveCell = board.getCells()[nextMoveFromGoal.getX()][nextMoveFromGoal.getY()];
-            // Si la cellule choisie contient un nombre non nul d'humains, on l'ajoute à humansEaten
-            if (nextMoveCell.getPopulation() > 0 && nextMoveCell.getKind().equals("humans")) {
-                humansEaten += nextMoveCell.getPopulation();
-            }
-
-            // On ajoute le véritable move à la liste des mouvements réels
-            Result realMove = new Result(res.getSource(), res.getItemsMoved(), nextMoveFromGoal);
-            realMoves.add(realMove);
-        }
-        return humansEaten;
     }
 
     /**
@@ -328,7 +340,7 @@ public class Node {
      * @param goalMoves
      * @return
      */
-    private List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
+    public List<ArrayList<Result>> computeAllMoves(HashMap<Position, ArrayList<Result>> goalMoves) {
         List<ArrayList<Result>> allMoves = new ArrayList<>();
         int solutions = 1;
 
@@ -348,23 +360,14 @@ public class Node {
             }
         }
 
-        return allMoves;
-    }
+        List<ArrayList<Result>> allMovesPermuted = new ArrayList<>();
 
-    /**
-     * Fonction à n'utiliser que si le serveur n'a pas été mis à jour pour la présentation.
-     * Retire d'une liste de coups possibles ceux pour lesquels une case de départ est la même qu'une case d'arrivée.
-     */
-    private boolean isSafeMoves(ArrayList<Result> allMoves) {
-        for (Result simpleMove1: allMoves) {
-            for (Result simpleMove2: allMoves) {
-                // Si un déplacement se termine là où un autre commence, on supprime ce déplacement
-                if (simpleMove1.getSource() == simpleMove2.getDestination()) {
-                    return false;
-                }
-            }
+        for (ArrayList<Result> combination: allMoves) {
+            ArrayList<ArrayList<Result>> permutedCombination = Result.permute(combination);
+            allMovesPermuted.addAll(permutedCombination);
         }
-        return true;
+
+        return allMovesPermuted;
     }
 
     /**
@@ -375,6 +378,7 @@ public class Node {
      */
     private ArrayList<Result> findBestMoveForStrategy(String movement, Position position) {
         int population = board.getCells()[position.getX()][position.getY()].getPopulation();
+        String kind = board.getCells()[position.getX()][position.getY()].getKind();
         ArrayList<Position> keptPositions = new ArrayList<>();
         double minRatio = Double.POSITIVE_INFINITY;
         switch (movement) {
@@ -392,12 +396,13 @@ public class Node {
                     if (population > 1.5 * oppPop) {
                         double ratio = (double) oppPop / (double) Utils.minDistance(opp, position);
                         // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
-                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, opp, ratio);
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, opp, ratio, 1);
                     }
                 }
-                if (keptPositions.size() == 0 && minOpponentPop > population) {
+                if (keptPositions.size() == 0 && minOpponentPop > population && board.getHumans().size() == 0 && board.getHomesByKind(kind) == 1) {
                     // Si on ne peut pas tuer à coup sûr des ennemis et que notre taille est plus petite que la plus
-                    // petite de l'ennemi, on tente le tout pour le tout et on attaque
+                    // petite de l'ennemi, on tente le tout pour le tout et on attaque (s'il n'y a plus d'humains sur la
+                    // carte
                     keptPositions.add(minOpponent);
                 }
             case "transform":
@@ -409,20 +414,23 @@ public class Node {
                     if (population >= humanPop) {
                         double ratio = (double) humanPop / (double) Utils.minDistance(human, position);
                         // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
-                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, human, ratio);
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, human, ratio, 1);
                     }
                 }
             case "unify":
                 // Un groupe peu chercher à rejoindre un autre groupe de la carte. On cherche simplement à rejoindre le
                 // groupe le plus proche.
-                for (Position allies: board.getAllies()) {
+                for (Position ally: board.getAllies()) {
+                    int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                     // Si la case alliée visée n'est pas la case actuelle
-                    if (!position.equals(allies)) {
-                        double ratio = 1.0 / (double) Utils.minDistance(allies, position);
+                    if (!position.equals(ally) && allyPop >= population) {
+                        double ratio = 1.0 / (double) Utils.minDistance(ally, position);
                         // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
-                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, allies, ratio);
+                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, ally, ratio, 1);
                     }
                 }
+            case "escape":
+                // Partir le plus loin possible des ennemis
         }
 
         // Pour chacune position gardée, on crée un nouveau résultat, de la position étudiée vers la position gardée,
@@ -446,9 +454,9 @@ public class Node {
      * @return
      */
     private double addOrNotToKeptPositions(Position position, ArrayList<Position> keptPositions, double minRatio,
-                                           Position other, double ratio) {
+                                           Position other, double ratio, int maxNumber) {
 
-        if (keptPositions.size() < 3) {
+        if (keptPositions.size() < maxNumber) {
 
             keptPositions.add(other);
             minRatio = Math.min(minRatio, ratio);

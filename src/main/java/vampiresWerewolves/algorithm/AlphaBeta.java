@@ -19,7 +19,7 @@ public class AlphaBeta extends Algorithm {
     public ArrayList<Result> algorithm(int depth) {
         // On lance la logique à la profondeur de départ, sur le noeud racine avec alpha à -inf et beta à +inf
         alphaBeta(root, depth, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
-        Node.logger.info("Best moves chosen are " + bestMoves);
+        // Node.logger.info("Best moves chosen are " + bestMoves);
         // On retourne les meilleurs mouvements
         return bestMoves;
     }
@@ -34,7 +34,7 @@ public class AlphaBeta extends Algorithm {
     private double alphaBeta(Node node, int depth, double alpha, double beta) {
 
         // Si la profondeur est égale à 0, c'est à dire que l'on atteint la profondeur max de notre arbre, on évalue le noeud
-        if (depth == 0) {
+        if (depth == 0 || node.getBoard().isGameOver()) {
             return node.heuristic();
         }
 
