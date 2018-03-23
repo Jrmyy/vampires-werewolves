@@ -405,6 +405,7 @@ public class Node {
 
         switch (movement) {
             case "attack":
+                minRatio = Double.NEGATIVE_INFINITY;
                 // En late game, il va falloir attaquer les ennemis
                 Double minOpponentPop = Double.POSITIVE_INFINITY;
                 Position minOpponent = null;
@@ -417,8 +418,11 @@ public class Node {
                     // Si on peut battre l'adversaire à coup sûr
                     if (population > 1.5 * oppPop) {
                         double ratio = (double) oppPop / (double) Utils.minDistance(opp, position);
-                        // On ajoute l'élément si la liste ne contient pas déjà 3 élément et si le ratio dépasse le ratio minimal
-                        minRatio = addOrNotToKeptPositions(position, keptPositions, minRatio, opp, ratio, 1);
+                        if (ratio > minRatio) {
+                            keptPositions.clear();
+                            keptPositions.add(opp);
+                            minRatio = ratio;
+                        }
                     }
                 }
                 if (keptPositions.size() == 0 && minOpponentPop > population && board.getHumans().size() == 0 && board.getHomesByKind(kind) == 1) {
