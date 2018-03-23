@@ -49,7 +49,7 @@ public class AlphaBeta extends Algorithm {
                 // Si la valeur est strictement plus grande que alpha
                 if (temp > alpha) {
                     // Si le noeud est la racine, c'est qu'on est remonté en haut, et donc on assigne les mouvements à faire
-                    if (node.equals(root)) {
+                    if (node.equals(root) && child.getAllyMoves().size() >= 1) {
                         this.bestMoves = child.getAllyMoves().get(0);
                     }
                     // Dans tous les cas, alpha = max(alpha, temp)

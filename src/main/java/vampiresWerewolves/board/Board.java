@@ -261,10 +261,6 @@ public class Board implements Serializable {
         simulated.setCurrentPlayer(this.getCurrentPlayer().equals(this.getUs()) ? this.getOpponent() : this.getUs());
         // Node.logger.info("Simulated map is " + simulated.toString());
 
-        if (!simulated.checkConsistency()) {
-            System.out.println("/!\\ Board not coherent :\n" + simulated.toString());
-        }
-
         return simulated;
     }
 
@@ -378,19 +374,16 @@ public class Board implements Serializable {
     private boolean checkConsistency() {
         for (Position human: this.getHumans()) {
             if (!this.getCells()[human.getX()][human.getY()].getKind().equals("humans")) {
-                System.out.println("Not coherent because of humans at " + human.toString());
                 return false;
             }
         }
         for (Position allies: this.getAllies()) {
             if (!this.getCells()[allies.getX()][allies.getY()].getKind().equals(this.getUs().getRace())) {
-                System.out.println("Not coherent because of allies at " + allies.toString());
                 return false;
             }
         }
         for (Position opp: this.getOpponents()) {
             if (!this.getCells()[opp.getX()][opp.getY()].getKind().equals(this.getOpponent().getRace())) {
-                System.out.println("Not coherent because of opponents at " + opp.toString());
                 return false;
             }
         }

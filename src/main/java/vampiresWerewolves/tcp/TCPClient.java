@@ -87,13 +87,11 @@ public class TCPClient {
 
     public byte[] listenSET() {
         byte[] dimension = this.baseListen();
-        System.out.println("    Map size : " + dimension[0] + "x" + dimension[1]);
         return dimension;
     }
 
     public byte[] listenHME() {
         byte[] home = this.baseListen();
-        System.out.println("    Home position is : " + home[0] + "x" + home[1]);
         return home;
     }
 
@@ -113,12 +111,10 @@ public class TCPClient {
             byte[] nbHumans = new byte[1];
             byte[] humanPosition = new byte[2];
             this.in.read(nbHumans);
-            System.out.println("    " + nbHumans[0] + " humans positions received");
             byte[][] allHumans = new byte[nbHumans[0]][2];
             for(int i = 0; i < nbHumans[0]; i++){
                 this.in.read(humanPosition);
                 System.arraycopy( humanPosition, 0, allHumans[i], 0, 2 );
-                System.out.println("    Humans at position " + humanPosition[0] + "x" + humanPosition[1]);
             }
             return allHumans;
         } catch (IOException e) {
@@ -132,12 +128,10 @@ public class TCPClient {
             byte[] nbCells = new byte[1];
             byte[] cellContent = new byte[5];
             this.in.read(nbCells);
-            System.out.println("    " + nbCells[0] + " cells to update");
             byte[][] allContents = new byte[nbCells[0]][5];
             for(int i = 0; i < nbCells[0]; i++){
                 this.in.read(cellContent);
                 System.arraycopy( cellContent, 0, allContents[i], 0, 5 );
-                System.out.println("    Cell " + cellContent[0] + "x" + cellContent[1] + " must be updated with " + cellContent[2] + " humans, " + cellContent[3] + " vampires and " + cellContent[4] + " werewolves");
             }
             return allContents;
         } catch (IOException e) {
@@ -149,7 +143,7 @@ public class TCPClient {
     public void sendName() {
         // Send the player's name to the server
         try {
-            String player = "Jorubabel Le Sanglier";
+            String player = "Enigma";
             byte[] playerName = player.getBytes();
             byte nameLength = (byte) playerName.length;
             this.out.write(NME);
@@ -167,10 +161,8 @@ public class TCPClient {
             byte nbMove = (byte) moves.size();
             this.out.write(MOV);
             this.out.write(nbMove);
-            System.out.println("    " + nbMove + " moves has been sent");
             for (byte[] move: moves) {
                 this.out.write(move);
-                System.out.println("    Move sent : " + move[2] + " units moved from " + move[0] + "x" + move[1] + " to " + move[3] + "x" + move[4]);
             }
         } catch (IOException e) {
             e.printStackTrace();

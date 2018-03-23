@@ -32,7 +32,8 @@ public class Node {
     private int humansEatenByOpponent = 0;
 
     // Type de stratégie étudiée pour la création des branches
-    private static final String[] MOVEMENT_TYPES = {"transform", "attack", "unify", "escape"};
+    private static final String[] EARLY_STRATEGIES = {"transform", "attack"};
+    private static final String[] LATE_STRATEGIES = {"unify", "escape"};
 
     // Cache de l'heuristique : permet d'éviter de calculer des branches identiques à d'autres précédemment étudiées
     private static HashMap<Integer, Double> heuristicCache = new HashMap<>();
@@ -169,8 +170,7 @@ public class Node {
                 int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                 ArrayList<Result> allMoves = new ArrayList<>();
                 // Pour chacune des stratégies, on cherche les 3 meilleurs coups à jouer
-                for (String strategy: MOVEMENT_TYPES) {
-
+                for (String strategy: EARLY_STRATEGIES) {
                     if (strategy.equals("transform")) {
                         // En stratégie 'transform', on va chercher les 3 meilleurs coups d'attaque d'humains
                         ArrayList<Result> earlyMoves = this.findBestMoveForStrategy(strategy, ally);
@@ -189,7 +189,7 @@ public class Node {
                                 earlyMovesSplit.add(new Result(eMove.getSource(), minPopToSplit, eMove.getDestination()));
                             }
                         }
-                        if (this.board.getAllies().size() < 3) {
+                        if (this.board.getAllies().size() < 2) {
                             allMoves.addAll(earlyMovesSplit);
                         }
                         // on liste tous les mouvements possibles
@@ -201,6 +201,13 @@ public class Node {
                         allMoves.addAll(this.findBestMoveForStrategy(strategy, ally));
                     }
                 }
+
+                if (allMoves.size() == 0) {
+                    for (String strategy: LATE_STRATEGIES) {
+                        allMoves.addAll(this.findBestMoveForStrategy(strategy, ally));
+                    }
+                }
+
                 // On ajoute au dictionnaire la clé de l'allié considéré et tous ses mouvements possibles en valeur
                 goalMoves.put(ally, Result.dropDuplicates(allMoves));
             }
@@ -259,7 +266,7 @@ public class Node {
                 // On peuple le dictionnaire des goalMoves avec comme clé la position des ennemis et comme valeurs leurs
                 // mouvement possibles
                 ArrayList<Result> allMoves = new ArrayList<>();
-                for (String strategy: MOVEMENT_TYPES) {
+                for (String strategy: EARLY_STRATEGIES) {
                     allMoves.addAll(this.findBestMoveForStrategy(strategy, opp));
                 }
                 goalMoves.put(opp, Result.dropDuplicates(allMoves)); }
@@ -381,12 +388,27 @@ public class Node {
         String kind = board.getCells()[position.getX()][position.getY()].getKind();
         ArrayList<Position> keptPositions = new ArrayList<>();
         double minRatio = Double.POSITIVE_INFINITY;
+
+        ArrayList<Position> opponents;
+        if (board.getUs().getRace().equals(kind)) {
+            opponents = board.getOpponents();
+        } else {
+            opponents = board.getAllies();
+        }
+
+        ArrayList<Position> allies;
+        if (board.getUs().getRace().equals(kind)) {
+            allies = board.getAllies();
+        } else {
+            allies = board.getOpponents();
+        }
+
         switch (movement) {
             case "attack":
                 // En late game, il va falloir attaquer les ennemis
                 Double minOpponentPop = Double.POSITIVE_INFINITY;
                 Position minOpponent = null;
-                for (Position opp: board.getOpponents()) {
+                for (Position opp: opponents) {
                     int oppPop = board.getCells()[opp.getX()][opp.getY()].getPopulation();
                     if (oppPop < minOpponentPop) {
                         minOpponentPop = (double) oppPop;
@@ -420,7 +442,7 @@ public class Node {
             case "unify":
                 // Un groupe peu chercher à rejoindre un autre groupe de la carte. On cherche simplement à rejoindre le
                 // groupe le plus proche.
-                for (Position ally: board.getAllies()) {
+                for (Position ally: allies) {
                     int allyPop = board.getCells()[ally.getX()][ally.getY()].getPopulation();
                     // Si la case alliée visée n'est pas la case actuelle
                     if (!position.equals(ally) && allyPop >= population) {
@@ -431,6 +453,29 @@ public class Node {
                 }
             case "escape":
                 // Partir le plus loin possible des ennemis
+                ArrayList<Position> adjPositions = Utils.findAdjacentCells(board.getCols(), board.getRows(), position);
+                ArrayList<Position> adjToRemove = new ArrayList<>();
+                for (Position adj: adjPositions) {
+                    Cell adjCell = board.getCells()[adj.getX()][adj.getY()];
+                    if ((adjCell.getKind().equals("humans") && adjCell.getPopulation() > population)
+                        || (adjCell.getKind().equals(board.getOpponent().getRace()) && population <= 1.5 * adjCell.getPopulation())) {
+                        adjToRemove.add(adj);
+                    }
+                }
+                adjPositions.removeAll(adjToRemove);
+                int maxDistance = 0;
+                Position bestEscape = adjPositions.get(0);
+                for (Position adj : adjPositions) {
+                    int localMaxDistance = 0;
+                    for (Position opp: opponents) {
+                        localMaxDistance += Utils.minDistance(adj, opp);
+                    }
+                    if (localMaxDistance > maxDistance) {
+                        maxDistance = localMaxDistance;
+                        bestEscape = adj;
+                    }
+                }
+                keptPositions.add(bestEscape);
         }
 
         // Pour chacune position gardée, on crée un nouveau résultat, de la position étudiée vers la position gardée,
@@ -505,15 +550,6 @@ public class Node {
 
     private static Logger createLogger() {
         Logger log = Logger.getLogger("my logger");
-        Handler fh;
-        try {
-            fh = new FileHandler("logs/myLog.log");
-            fh.setFormatter(new SimpleFormatter());
-            log.addHandler(fh);
-            log.setUseParentHandlers(false);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return log;
     }
 }
