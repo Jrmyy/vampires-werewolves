@@ -1,4 +1,4 @@
-## Rapport projet d'intelligence artificielle 
+﻿## Rapport projet d'intelligence artificielle 
 
 <p align="justify">Ce projet a pour but de créer une Intelligence Artificielle permettant de jouer au jeu "Vampires vs Loup-Garous".</p>
 
@@ -6,6 +6,8 @@
 + **[1. Prérequis](#prerequisites)**
 + **[2. La structure du code](#code_structure)**
 + **[3. Structure de l'IA](#ia_struct)**
+  + **[3.1. Représentation d'un état du jeu](#board_representation)**
+  + **[3.2. Création d'un nouvel état](#new_representation)**
 + **[4. L'implémentation de l'algorithme AlphaBeta](#alg_implementation)**
   + **[4.1. Le déroulé général](#general_behavior)**
   + **[4.2. La création des alternatives/branches](#branches)**
@@ -35,8 +37,30 @@
   - `AlphaBeta`: C'est ici que l'algorithme est déroulé, et cette classe contient la logique et l'heuristique. </p>
   
 ### 3. Architecture de l'IA et Représentation de l'environnement <a name="ia_struct"></a>
+
+#### 3.1. Représentation d'un état du jeu <a name="board_representation"></a>
   
-  
+<p align="justify">La classe Board permet aussi bien de représenter l'état actuel du plateau de jeu que des états futurs estimés. Pour cela elle garde en mémoire un tableau de toutes les cellules du plateau, celles-ci étant remplies avec le type d'espèce présente et la quantité de population. 
+
+Sont également gardés en mémoire trois liste pour connaitre les positions des humains, des alliés et des ennemis sur la carte. Cela permet ainsi de retrouver rapidement chacun des groupes sans avoir à parcourir toutes les cellules.
+
+Par ailleurs, puisque l'on raisonne entre alliés et ennemis plutôt qu'entre vampires et loups-garous, on garde également en mémoire la race jouée par chacun des joueurs (ainsi que la race à qui c'est le tour de jouer).</p>
+
+#### 3.2. Création d'un nouvel état <a name="new_representation"></a>
+
+<p align="justify">À partir d'un état estimer à un moment de l'algorithme, il convient de pouvoir estimer des états futurs à partir des déplacements effectués. 
+
+La classe Result permet de représenter de déplacement d'une certaine quantité de population d'une case à une autre case adjacente. Ainsi, le coup joué à l'issue d'un tour est déterminé par une liste d'objets Result contenant tous les déplacement effecutés (en veillant bien sûr à ce que tous ces déplacements soient possibles et compatibles).
+
+Déterminer un nouvel état du jeu se fait alors en deux étapes :
+- déterminer un ensemble de déplacements que l'on peut envisager (pas nécessairement exhaustif pour éviter une explosion combinatoire);
+- créer pour chaque mouvement un nouveau noeud contenant le nouvel état du jeu.
+
+Lorsque l'on génère un nouveau Board, on modifie le contenu des cellules suite au déplacement effectué. On modifie de même la liste des positions de chaque race. Par ailleurs, lorsque l'on génère le noeud contenant ce nouvel état du terrain, on garde également en mémoire la liste des mouvements effectués (pour pouvoir remonter cette information lors de la prise de décision finale) ainsi que le nombre d'humains mangés par chaque camp depuis le noeud initial (pour pouvoir utiliser cette valeur dans l'heuristique).
+
+</p>
+
+<!-- 3.3. Branches -->
   
 ### 4. L'implémentation de l'algorithme AlphaBeta <a name="alg_implementation"></a>
 
