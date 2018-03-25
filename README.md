@@ -13,7 +13,8 @@
   + **[4.2. La création des alternatives/branches](#branches)**
   + **[4.3. Séparation et rassemblement](#split_merge)**
   + **[4.4. L'heuristique](#heuristic)**
-+ **[5. Idées d'amélioration](#next_steps)**
++ **[5. Tester localement](#test)**
++ **[6. Idées d'amélioration](#next_steps)**
 
 ### 1. Prérequis  <a name="prerequisites"></a>
 
@@ -150,7 +151,11 @@ Où la fonction `score` est déterminée de la manière suivante:
 
 Ici, le raisonnement est implicite à la formule : pour chaque allié, on va trouver l'ennemi le plus proche, et calculer le score en fonction des populations de chacun des deux groupes **(AlphaBeta L. 117 - L. 141)**.
 
-### 5. Idées d'amélioration <a name="next_steps"></a>
+### 5. Tester localement <a name="test"></a>
+
+Pour lancer l'IA localement, il suffit de lancer la jar avec l'hote et le port en paramètres. Par exemple, on pourra lancer la commande `java -jar vampires-werewolves.jar localhost 1234`.
+.
+### 6. Idées d'amélioration <a name="next_steps"></a>
 
 Afin d'améliorer notre IA, nous aurions également pu: 
 - Entrainer plusieurs algorithmes (AlphaBeta, SSS...) pour déterminer le plus efficace sur un nombre représentatif de parties
