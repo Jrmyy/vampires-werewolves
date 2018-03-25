@@ -76,15 +76,23 @@ Lorsque l'on génère un nouveau Board, on modifie le contenu des cellules suite
 
 #### 4.2. La création des alternatives/branches <a name="branches"></a>
 
-C'est dans l'exécution de l'algorithme `AlphaBeta` qu'on créé l'arbre des différentes alternatives (avec la méthode `createAlternatives` **(AlphaBeta L. 42)**)
+C'est dans l'exécution de l'algorithme `AlphaBeta` qu'on créé l'arbre des différentes alternatives (avec la méthode `createAlternatives` **(AlphaBeta L. 42)**). Le schéma est le suivant: pour chaque stratégie, nous allons récupèrer les meilleurs mouvements à réaliser avec la méthode `findBestMovesForStrategy`**(Node, L. 386)**. Cette méthode permet, à partir d'une position et d'une stratégie, de renvoyer un nombre limite de choix que l'on considère comme les meilleurs. Cela nous permet de limiter le nombre de branches et d'être un peu plus intelligent qu'un glouton, qui étudierait les cases adjacentes à la position. Pour se faire nous étudions 4 stratégies:
+
+- L'attaque : Il s'agit ici de retourner le groupe présentant le meilleur ratio nombre d'ennemis / distance pour y arriver, sous reserve que l'on gagne à coup sûr la bataille (c'est à dire que nous ne nous intéressons qu'aux groupes d'ennemis dont 1,5 * leur nombre est plus petit que la position que nous étudions). Dans le cas où aucun groupe ne serait trouvé mais qu'il ne nous reste qu'un seul groupe et pas d'humains, nous attaquons le groupe le plus faible (c'est la stratégie de jouer le tout pour le tout parce que nous avons perdu si nous ne faisons rien).
+- La transformation : Ici, nous allons retourner les deux groupes d'humains, dont la population est inférieure ou égale au nombre d'éléments sur la position étudiée, présentant le meilleur ratio nombre d'humains / distance pour y arriver.
+- La fuite : Pour calculer la meilleure position de fuite, nous allons simplement maximiser la somme des distances vis-à-vis des adversaires pour chacune des cases adjacentes à la position étudiée.
+- L'unification : On va ici retourner la position du plus proche groupe le plus grand de nous vers lequel on pourrait aller pour se réunir.
+
+Il faut noter ici que les stratégies de réunification et de fuite ne sont étudiées que si l'attaque et la transformation ne renvoient aucun résultat. Ceci permet d'élaguer naturellement l'arbre en début de partie. Une fois que l'on a récupérée cette liste de destinations potentielles, on regarde, pour la transformation, s'il n'est pas possible de se séparer **(Node, L. 180)**. La décision de se séparer ou non sera détaillée dans la partie suivante.
+
+Maintenant que l'on a nos voeux d'actions, il faut transcrire cela en des combinaisons de mouvements de nos unités ou des unités adversaires. Ceci est le but de la fonction `computeAllMoves` **(Node L. 350)**. Cela va permettre de créer toutes les combinaisons possibles de mouvements d'unités, en prenant en compte tous les ordres, et tous les mouvements différents. Cette technique, couteuse en terme de calcul, a le mérite de faire comme si on regardait l'influence des mouvements de chaque unité sur les autres et on prenait la meilleure combinaison de mouvement. Nous enlevons cependant les combinaisons de mouvements dont deux destinations sont égales, cela permet d'enlever les mouvements de troupes qui veulent atteindre le même point. Nous enlevons également les mouvements circulaires, qui ne sont pas de vrais mouvements mais simplement des échanges de troupes entre positions adjacentes. Cependant, ces mouvements restent encore vers des cibles, et ce ne sont pas donc pas encore de vrais mouvements sur des cases adjacentes. On passe donc ensuite sur ces combinaisons pour trouver le meilleur mouvement à faire pour aller d'une source vers une cible. C'est le but de la fonction `findBestMove` du package utils. Ces combinaisons de mouvements sont ensuite utilisées pour créer des noeuds enfants, après avoir créé une nouvelle carte avec ces mouvements.
+
+Il est à noter que pour l'adversaire, nous n'étudions que l'attaque et la transformation sans séparation. Cela serait trop couteux pour notre IA de considérer tous ces choix en plus.
 
 #### 4.3. Séparation et rassemblement <a name="split_merge"></a>
 
-Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés. 
-L'algorithme de split est explicité dans le document `Node` (l 162).
-Si c'est à notre tour de jouer, on analyse les trois meilleurs coups à jouer pour chaque stratégie (Attack ou Transform).
-Pour chaque mouvement, on détermine le nombre d'alliés minimum pour jouer le coup, et si le coup minimum est tel que le nombre d'alliés restant est supérieur au nombre minimal précédemment fixé, on l'ajoute aux mouvements possibles. Ce split peut alors être joué.
-Pour des raisons de rapidité de l'algorithme et de multiplication des nombre de branches, et ainsi du temps de calcul, nous avons limité nos split à trois groupes.
+Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés.
+
 
 #### 4.4. L'heuristique <a name="heuristic"></a>
 
