@@ -80,8 +80,11 @@ C'est dans l'exécution de l'algorithme `AlphaBeta` qu'on créé l'arbre des dif
 
 #### 4.3. Séparation et rassemblement <a name="split_merge"></a>
 
-Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés.
-
+Dans certains scénarios, il peut être utile de séparer les alliés en plusieurs groupes. Les groupes d'alliés ainsi formés doivent respecter certains critères : ils doivent ainsi tous avoir une taille leur permettant de gagner au moins un combat sur la carte. Concrètement, cette condition signifique que chaque groupe d'alliés formé doit comprendre au moins min(Nombre minimum d'humain, 1,5 * Nombre minimum d'ennemis) alliés. 
+L'algorithme de split est explicité dans le document `Node` (l 162).
+Si c'est à notre tour de jouer, on analyse les trois meilleurs coups à jouer pour chaque stratégie (Attack ou Transform).
+Pour chaque mouvement, on détermine le nombre d'alliés minimum pour jouer le coup, et si le coup minimum est tel que le nombre d'alliés restant est supérieur au nombre minimal précédemment fixé, on l'ajoute aux mouvements possibles. Ce split peut alors être joué.
+Pour des raisons de rapidité de l'algorithme et de multiplication des nombre de branches, et ainsi du temps de calcul, nous avons limité nos split à trois groupes.
 
 #### 4.4. L'heuristique <a name="heuristic"></a>
 
