@@ -71,7 +71,8 @@ Lorsque l'on génère un nouveau Board, on modifie le contenu des cellules suite
 1. A chaque tour, on récupère la trame d'update de la carte et on appelle alors la méthode `fillOrUpdate` de `Board` **(Board L. 64)**. Cette méthode est appelée au début de la partie pour créer toute la carte mais également à chaque tour afin de garder la carte dans la même état que le serveur.
 2. Une fois la carte mise à jour, on va envoyer nos mouvements. Pour ce faire, la classe `Board` va instantier une instance de `AlphaBeta` avec comme racine de l'arbre la carte courante, avant notre tour de jeu. **(Board, L. 317)**
 3. On va alors appeler la méthode `algorithm` de `AlphaBeta` à une profondeur 3. **(Board L. 323)**
-4. Cette fonction va simplement appeler `AlphaBeta` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(AlphaBeta L. 24)**
+4. Des appels récursifs seront faits afin de diminuer la profondeur et donc descendre dans l'arbre jusqu'à la profondeur voulue. L'heuristique étant calculée lorsque le noeud est terminal (partie terminée) ou que la profondeur maximale est atteinte.
+5. Cette fonction va simplement appeler `AlphaBeta` et retourner l'attribut de classe `bestMoves`, représentant les mouvements à envoyer au serveur. **(AlphaBeta L. 24)**
 </p>
 
 #### 4.2. La création des alternatives/branches <a name="branches"></a>
